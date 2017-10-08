@@ -1,13 +1,19 @@
 PROGRAM main
 
 
-CALL HELLO()
+    IMPLICIT NONE
+    
+    logical :: dbg
+    integer :: ZATOM, CHARGE, NBASIS
+    real*8, allocatable :: BASIS(:)
+
 
 ! Inicializar variáveis
 
 
 ! Carregar input
-
+call openFiles()
+call readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
 
 ! Abrir arquivos de escrita
 
@@ -27,5 +33,7 @@ CALL HELLO()
 ! Calcular E. Potencial (UMAT)
 
 
+! Fechar arquivos
+call closeFiles()
 
 END PROGRAM main
