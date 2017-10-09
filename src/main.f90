@@ -1,6 +1,6 @@
 PROGRAM main
 
-
+    USE DiskOperations
     IMPLICIT NONE
     
     logical :: dbg
@@ -9,12 +9,20 @@ PROGRAM main
 
 
 ! Inicializar variáveis
-
+    ZATOM = 0
+    CHARGE = 0
+    NBASIS = 0
+    BASIS = 0.d0
+    dbg = .false.
 
 ! Carregar input
 call openFiles()
 call readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
 
+if(dbg) then
+    PRINT *, "DEBUG ON!"
+    call dbgInput(ZATOM,CHARGE,NBASIS,BASIS)
+end if
 ! Abrir arquivos de escrita
 
 

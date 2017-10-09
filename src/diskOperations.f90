@@ -2,19 +2,24 @@
 ! MÓDULO VOLTADO PARA OPERAÇÕES NO DISCO, COMO ABERTURA, LEITURA E     !
 ! ESCRITA DE/EM ARQUIVOS                                               !
 !                                                                      !
+!   Dev.: Matheus Campos Quintão  | mcquintao.qui@gmail.com            !
+!   Última edição: 09/10/17                                            !
+!                                                                      !
 ! SUBROTINAS PRESENTES:                                                !
 !                                                                      !
 ! -> openFiles()                                                       !
 ! -> closeFiles()                                                      !
 ! -> readInput()                                                       !
+! -> dbgInput()                                                        !
 !----------------------------------------------------------------------!
 
+MODULE DiskOperations
 
+CONTAINS
 
 SUBROUTINE openFiles()
 
-!   Subrotina para abrir arquivos de leitura e escrita
-!   Matheus Campos Quintão
+!   Subrotina para abrir arquivos
 !   Última edição: 08/10/17
 
     IMPLICIT NONE
@@ -71,18 +76,12 @@ SUBROUTINE readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
 ! 20           (BASE 2)
 ! 30           (BASE 3)
 ! 40           (BASE 4)
-!
-
-
 
     IMPLICIT NONE
     logical, intent(out) :: dbg
     integer, intent(out) :: ZATOM, CHARGE, NBASIS
     integer :: i, j
-    real*8, allocatable, intent(INOUT) :: BASIS(:)
-
-
-
+    real*8, allocatable :: BASIS(:)
 
 ! ler a primeira linha do input
     read(1,*) ZATOM, CHARGE, NBASIS
@@ -90,6 +89,7 @@ SUBROUTINE readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
     
 ! Alocação dinâmica de memória para o vetor de bases
     ALLOCATE(BASIS(1:NBASIS))
+
     
 ! Se ZATOM for negativo, o DEBUG será ativado!
     if(ZATOM.lt.0) then
@@ -102,10 +102,16 @@ SUBROUTINE readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
         read(1,*) BASIS(i)
     end do
 
+END SUBROUTINE readInput
 
-! SE DEBUG for VERDADEIRO
-    if(dbg) then
-    PRINT *, "DBG - readInput"    
+SUBROUTINE dbgInput(ZATOM,CHARGE,NBASIS,BASIS)
+
+    IMPLICIT NONE
+    integer, intent(in) :: ZATOM, CHARGE, NBASIS
+    integer :: i
+    real*8, dimension(NBASIS) :: BASIS
+
+    PRINT *, "DBG - dbgInput"    
     write(99,*) "------DADOS DO INPUT------"
     
     write(99,"(A18, I2)") "Número atômico: ", ZATOM
@@ -119,8 +125,7 @@ SUBROUTINE readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
     write(99,*) "--------------------------"
     write(99,*)
     
-    end if
 
+END SUBROUTINE dbgInput
 
-
-END SUBROUTINE readInput
+END MODULE DiskOperations
