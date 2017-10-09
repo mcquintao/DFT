@@ -1,5 +1,4 @@
-## DFT: Programa FORTRAN para cálculo da estrutura eletrônica de um átomo
-##      via HF e DFT;
+# DFT: Programa FORTRAN para cálculo da estrutura eletrônica de um átomo
 
 em construção ... 
 
