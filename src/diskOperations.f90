@@ -11,6 +11,7 @@
 ! -> closeFiles()                                                      !
 ! -> readInput()                                                       !
 ! -> dbgInput()                                                        !
+! -> dbgOverlap()                                                        !
 !----------------------------------------------------------------------!
 
 MODULE DiskOperations
@@ -116,7 +117,7 @@ SUBROUTINE dbgInput(ZATOM,CHARGE,NBASIS,BASIS)
     
     write(99,"(A18, I2)") "Número atômico: ", ZATOM
     write(99,*) "Carga: ", CHARGE
-    write(99,"(A18, I2)") "Número de bases: ", NBASIS
+    write(99,"(A18, I4)") "Número de bases: ", NBASIS
     write(99,*) "BASE: "
     
     do i=1,NBASIS
@@ -127,5 +128,33 @@ SUBROUTINE dbgInput(ZATOM,CHARGE,NBASIS,BASIS)
     
 
 END SUBROUTINE dbgInput
+
+
+SUBROUTINE dbgOverlap(SMAT,NBASIS)
+
+    IMPLICIT NONE
+    integer, intent(in) :: NBASIS
+    integer :: i, j
+    real*8, dimension(NBASIS,NBASIS), intent(in) :: SMAT
+    character(len=20) :: string
+
+    write (string, '("(" I4, "f7.4)" )' )  NBASIS
+
+    PRINT *, "DBG - dbgOverlap"    
+    write(99,*) "------OVERLAP MATRIX------"
+    
+    do i=1,NBASIS
+        write(99,string) (SMAT(i,j), j=1,NBASIS)
+    end do
+
+    write(99,*) "--------------------------"
+    write(99,*)
+    
+
+END SUBROUTINE dbgOverlap
+
+
+
+
 
 END MODULE DiskOperations

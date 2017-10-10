@@ -1,12 +1,13 @@
 PROGRAM main
 
     USE DiskOperations
+    USE DftOperations
     IMPLICIT NONE
     
     logical :: dbg
     integer :: ZATOM, CHARGE, NBASIS
     real*8, allocatable :: BASIS(:)
-
+    real*8, allocatable :: SMAT(:,:)
 
 ! Inicializar variáveis
     ZATOM = 0
@@ -19,17 +20,21 @@ PROGRAM main
 call openFiles()
 call readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
 
+ALLOCATE(SMAT(1:NBASIS,1:NBASIS))
+
 if(dbg) then
     PRINT *, "DEBUG ON!"
     call dbgInput(ZATOM,CHARGE,NBASIS,BASIS)
 end if
-! Abrir arquivos de escrita
-
 
 ! --- PROGRAMA PRINCIPAL --- !
 
 ! Calcular OVERLAP (SMAT)
+call overlapMatrix(BASIS,NBASIS,SMAT)
 
+if(dbg) then
+    call dbgOverlap(SMAT,NBASIS)
+end if
 
 ! Calcular X (XMAT)
 
