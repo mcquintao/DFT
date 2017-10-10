@@ -28,5 +28,22 @@ SUBROUTINE overlapMatrix(BASIS,NBASIS,SMAT)
 
 END SUBROUTINE overlapMatrix
 
+SUBROUTINE xOverlapMatrix(SMAT,NBASIS,SMAT_VEC,SMAT_VAL)
+
+    real*8 :: error = 0.000001d0
+
+    call jacobi(SMAT,SMAT_VEC,error,NBASIS)
+
+END SUBROUTINE xOverlapMatrix
+
+
+SUBROUTINE potentialMatrix(BASIS,NBASIS,UMAT)
+
+
+
+
+END SUBROUTINE potentialMatrix
+
+
 END MODULE DftOperations
 

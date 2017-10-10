@@ -38,13 +38,18 @@ end if
 
 ! Calcular X (XMAT)
 
+! INPUT: SMAT(NBASIS,NBASIS), NBASIS
+! OUTPUT: XMAT_VEC(NBASIS,NBASIS),XMAT_VAL(NBASIS,NBASIS)
+
+call xOverlapMatrix(SMAT,NBASIS,SMAT_VEC,SMAT_VAL)
+
 
 ! Calcular E. Cinética (TMAT)
 
 
 
 ! Calcular E. Potencial (UMAT)
-
+call potentialMatrix(BASIS,NBASIS,UMAT)
 
 ! Fechar arquivos
 call closeFiles()
