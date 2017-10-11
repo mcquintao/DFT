@@ -154,7 +154,4 @@ SUBROUTINE dbgOverlap(SMAT,NBASIS)
 END SUBROUTINE dbgOverlap
 
 
-
-
-
 END MODULE DiskOperations
