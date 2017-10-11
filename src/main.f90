@@ -7,13 +7,12 @@ PROGRAM main
     logical :: dbg
     integer :: ZATOM, CHARGE, NBASIS
     real*8, allocatable :: BASIS(:)
-    real*8, allocatable :: SMAT(:,:)
+    real*8, allocatable :: SMAT(:,:), TMAT(:,:)
 
 ! Inicializar variáveis
     ZATOM = 0
     CHARGE = 0
     NBASIS = 0
-    BASIS = 0.d0
     dbg = .false.
 
 ! Carregar input
@@ -21,6 +20,7 @@ call openFiles()
 call readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
 
 ALLOCATE(SMAT(1:NBASIS,1:NBASIS))
+ALLOCATE(TMAT(1:NBASIS,1:NBASIS))
 
 if(dbg) then
     PRINT *, "DEBUG ON!"
@@ -45,6 +45,11 @@ end if
 
 
 ! Calcular E. Cinética (TMAT)
+call kineticMatrix(BASIS,NBASIS,TMAT)
+
+if(dbg) then
+    call dbgKinetic(TMAT,NBASIS)
+end if
 
 
 

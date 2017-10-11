@@ -19,6 +19,7 @@ SUBROUTINE overlapMatrix(BASIS,NBASIS,SMAT)
       real*8, dimension(NBASIS), intent(in) :: BASIS
       real*8, dimension(NBASIS,NBASIS), intent(out) :: SMAT
 
+      SMAT=0.d0
       do i=1,NBASIS
         do j=1,NBASIS
             SMAT(i,j) = overlap(BASIS(i),BASIS(j))
@@ -27,6 +28,24 @@ SUBROUTINE overlapMatrix(BASIS,NBASIS,SMAT)
 
 
 END SUBROUTINE overlapMatrix
+
+SUBROUTINE kineticMatrix(BASIS,NBASIS,TMAT)
+
+      IMPLICIT NONE
+      
+      integer, intent(in) :: NBASIS
+      integer :: i, j
+      real*8, dimension(NBASIS), intent(in) :: BASIS
+      real*8, dimension(NBASIS,NBASIS), intent(out) :: TMAT
+
+      TMAT=0.d0
+      do i=1,NBASIS
+        do j=1,NBASIS
+            TMAT(i,j) = kinetic(BASIS(i),BASIS(j))
+        end do
+      end do
+
+END SUBROUTINE kineticMatrix
 
 END MODULE DftOperations
 

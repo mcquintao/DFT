@@ -87,9 +87,9 @@ SUBROUTINE readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
 ! ler a primeira linha do input
     read(1,*) ZATOM, CHARGE, NBASIS
 
-    
 ! Alocação dinâmica de memória para o vetor de bases
     ALLOCATE(BASIS(1:NBASIS))
+    BASIS=0.d0
 
     
 ! Se ZATOM for negativo, o DEBUG será ativado!
@@ -153,5 +153,27 @@ SUBROUTINE dbgOverlap(SMAT,NBASIS)
 
 END SUBROUTINE dbgOverlap
 
+SUBROUTINE dbgKinetic(TMAT,NBASIS)
+
+    IMPLICIT NONE
+    integer, intent(in) :: NBASIS
+    integer :: i, j
+    real*8, dimension(NBASIS,NBASIS), intent(in) :: TMAT
+    character(len=20) :: string
+
+    write (string, '("(" I4, "f9.4)" )' )  NBASIS
+
+    PRINT *, "DBG - dbgKinetic"    
+    write(99,*) "------KINETIC MATRIX------"
+    
+    do i=1,NBASIS
+        write(99,string) (TMAT(i,j), j=1,NBASIS)
+    end do
+
+    write(99,*) "--------------------------"
+    write(99,*)
+    
+
+END SUBROUTINE dbgKinetic
 
 END MODULE DiskOperations
