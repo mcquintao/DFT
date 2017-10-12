@@ -176,4 +176,29 @@ SUBROUTINE dbgKinetic(TMAT,NBASIS)
 
 END SUBROUTINE dbgKinetic
 
+
+SUBROUTINE dbgPotencial(UMAT,NBASIS) 
+    IMPLICIT NONE 
+    integer, intent(in) :: NBASIS 
+    integer :: i, j 
+    real*8, dimension(NBASIS,NBASIS), intent(in) :: UMAT 
+    character(len=20) :: string 
+
+    write (string, '("(" I4, "f9.4)" )' )  NBASIS 
+
+    PRINT *, "DBG - Potmat" 
+    write(99,*) "------Potencial MATRIX------" 
+
+    do i=1,NBASIS 
+        write(99,string) (UMAT(i,j), j=1,NBASIS) 
+    end do 
+
+    write(99,*) "--------------------------" 
+    write(99,*) 
+END SUBROUTINE dbgPotencial 
+
+
+
+
+
 END MODULE DiskOperations
