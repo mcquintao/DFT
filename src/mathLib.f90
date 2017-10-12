@@ -24,6 +24,7 @@ FUNCTION overlap(alpha,beta)
 
 END FUNCTION overlap
 
+
 FUNCTION kinetic(alpha,beta)
 
     
@@ -33,11 +34,11 @@ FUNCTION kinetic(alpha,beta)
     
     PI = 4.D0*DATAN(1.D0)
 
-    C1 = ((2.d0*alpha)/PI)**(3.d0/4.d0)
-    C2 = ((2.d0*beta)/PI)**(3.d0/4.d0)
+    kinetic = 6.d0*sqrt(2.d0)*((alpha**3.d0)*(beta**7.d0))**(1.d0/4.d0)
+    kinetic = kinetic/((alpha+beta)**(3.d0/2.d0))
+    kinetic = kinetic*(1 - (beta/(alpha + beta)))
 
-    kinetic = ((alpha + beta)**(-3.d0/2.d0) - (3.d0/4.d0)*(alpha + beta)**(-5.d0/2.d0))
-    kinetic = (4.d0*C1*C2*beta*(PI**(3.d0/2.d0)))*kinetic
+
 
 END FUNCTION kinetic
 
