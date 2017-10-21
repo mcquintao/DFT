@@ -153,6 +153,29 @@ SUBROUTINE dbgOverlap(SMAT,NBASIS)
 
 END SUBROUTINE dbgOverlap
 
+SUBROUTINE dbgTransference(XMAT,NBASIS)
+
+    IMPLICIT NONE
+    integer, intent(in) :: NBASIS
+    integer :: i, j
+    real*8, dimension(NBASIS,NBASIS), intent(in) :: XMAT
+    character(len=20) :: string
+
+    write (string, '("(" I4, "f10.4)" )' )  NBASIS
+
+    PRINT *, "DBG - dbgTransference"    
+    write(99,*) "------TRANSFERENCE MATRIX------"
+    
+    do i=1,NBASIS
+        write(99,string) (XMAT(i,j), j=1,NBASIS)
+    end do
+
+    write(99,*) "--------------------------"
+    write(99,*)
+    
+
+END SUBROUTINE dbgTransference
+
 SUBROUTINE dbgKinetic(TMAT,NBASIS)
 
     IMPLICIT NONE

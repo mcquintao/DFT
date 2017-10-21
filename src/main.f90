@@ -7,7 +7,7 @@ PROGRAM main
     logical :: dbg
     integer :: ZATOM, CHARGE, NBASIS
     real*8, allocatable :: BASIS(:)
-    real*8, allocatable :: SMAT(:,:), TMAT(:,:), UMAT(:,:)
+    real*8, allocatable :: SMAT(:,:), XMAT(:,:), TMAT(:,:), UMAT(:,:)
 
 ! Inicializar variáveis
     ZATOM = 0
@@ -20,6 +20,7 @@ call openFiles()
 call readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
 
 ALLOCATE(SMAT(1:NBASIS,1:NBASIS))
+ALLOCATE(XMAT(1:NBASIS,1:NBASIS))
 ALLOCATE(TMAT(1:NBASIS,1:NBASIS))
 ALLOCATE(UMAT(1:NBASIS,1:NBASIS))
 
@@ -38,7 +39,11 @@ if(dbg) then
 end if
 
 ! Calcular X (XMAT)
+CALL TransferenceMatrix(NBASIS,SMAT,XMAT)
 
+IF(dbg) THEN
+    CALL dbgTransference(XMAT,NBASIS)
+ENDIF
 
 ! Calcular E. Cinética (TMAT)
 call kineticMatrix(BASIS,NBASIS,TMAT)

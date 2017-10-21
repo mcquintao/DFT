@@ -8,6 +8,7 @@
 MODULE DftOperations
 
 USE MathLib
+USE DiskOperations
 CONTAINS
 
 SUBROUTINE overlapMatrix(BASIS,NBASIS,SMAT)
@@ -28,6 +29,39 @@ SUBROUTINE overlapMatrix(BASIS,NBASIS,SMAT)
 
 
 END SUBROUTINE overlapMatrix
+
+!=======================================================================
+SUBROUTINE TransferenceMatrix(NBASIS,SMAT,XMAT)
+! Subrotina para o calculo de matriz de transferencia (X)
+! X = U*S^(-1/2)
+! XSX' = 1
+!=======================================================================
+IMPLICIT NONE
+
+REAL*8, PARAMETER :: Tol = 1.0E-12
+INTEGER :: i, j
+INTEGER, INTENT(IN) :: NBASIS
+REAL*8, DIMENSION(NBASIS,NBASIS), INTENT(IN) :: SMAT
+REAL*8, DIMENSION(NBASIS,NBASIS), INTENT(OUT) :: XMAT
+REAL*8, DIMENSION(NBASIS,NBASIS) :: LOCAL_SMAT, SMAT_VEC
+REAL*8 WALBER
+
+LOCAL_SMAT = SMAT
+XMAT = 0.0D0
+SMAT_VEC = 0.0D0
+WALBER = 0.0D0
+
+CALL JACOBI(LOCAL_SMAT,SMAT_VEC,Tol,NBASIS)
+
+DO i = 1,NBASIS
+    WALBER = SQRT(LOCAL_SMAT(i,i))  ! AUTO VALORES
+    PRINT *, WALBER
+    DO j = 1, NBASIS                ! AUTO VETORES
+        XMAT(i,j) = SMAT_VEC(i,j)/WALBER
+    END DO
+END DO
+
+END SUBROUTINE TransferenceMatrix
 
 SUBROUTINE kineticMatrix(BASIS,NBASIS,TMAT)
 
