@@ -220,8 +220,44 @@ SUBROUTINE dbgPotencial(UMAT,NBASIS)
     write(99,*) 
 END SUBROUTINE dbgPotencial 
 
+SUBROUTINE dbgHcor(H,NBASIS) 
+    IMPLICIT NONE 
+    integer, intent(in) :: NBASIS 
+    integer :: i, j 
+    real*8, dimension(NBASIS,NBASIS), intent(in) :: H 
+    character(len=20) :: string 
 
+    write (string, '("(" I4, "f9.4)" )' )  NBASIS 
 
+    PRINT *, "DBG - HCore" 
+    write(99,*) "------HCore MATRIX------" 
 
+    do i=1,NBASIS 
+        write(99,string) (H(i,j), j=1,NBASIS) 
+    end do 
+
+    write(99,*) "--------------------------" 
+    write(99,*) 
+END SUBROUTINE dbgHcor
+
+SUBROUTINE dbgPMat(P,NBASIS) 
+    IMPLICIT NONE 
+    integer, intent(in) :: NBASIS 
+    integer :: i, j 
+    real*8, dimension(NBASIS,NBASIS), intent(in) :: P
+    character(len=20) :: string 
+
+    write (string, '("(" I4, "f9.4)" )' )  NBASIS 
+
+    PRINT *, "DBG - Density Matrix" 
+    write(99,*) "------DENSITY MATRIX------" 
+
+    do i=1,NBASIS 
+        write(99,string) (P(i,j), j=1,NBASIS) 
+    end do 
+
+    write(99,*) "--------------------------" 
+    write(99,*) 
+END SUBROUTINE dbgPMat
 
 END MODULE DiskOperations

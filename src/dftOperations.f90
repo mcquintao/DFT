@@ -53,11 +53,11 @@ WALBER = 0.0D0
 
 CALL JACOBI(LOCAL_SMAT,SMAT_VEC,Tol,NBASIS)
 
-DO i = 1,NBASIS
-    WALBER = SQRT(LOCAL_SMAT(i,i))  ! AUTO VALORES
-    PRINT *, WALBER
-    DO j = 1, NBASIS                ! AUTO VETORES
-        XMAT(i,j) = SMAT_VEC(i,j)/WALBER
+DO j = 1,NBASIS
+    WALBER = SQRT(LOCAL_SMAT(j,j))  ! AUTO VALORES
+    WALBER = 1.0d0/WALBER
+    DO i = 1, NBASIS                ! AUTO VETORES
+        XMAT(i,j) = SMAT_VEC(i,j)*WALBER
     END DO
 END DO
 
@@ -96,10 +96,45 @@ SUBROUTINE potentialMatrix(ZATOM,BASIS,NBASIS,Potmat)
     end do 
     end do 
 
-
 END SUBROUTINE potentialMatrix
 
+SUBROUTINE HCor(T,U,H,NBASIS)
 
+    integer, intent(in) :: NBASIS
+    integer :: i, j
+    real*8, dimension(NBASIS,NBASIS), intent(in) :: T, U
+    real*8, dimension(NBASIS,NBASIS), intent(out) :: H
+    
+    H = 0.d0
+    DO i=1,NBASIS
+        DO j=1,NBASIS
+            H(i,j) = T(i,j) + U(i,j)
+        END DO
+    END DO
+
+END SUBROUTINE HCor
+
+SUBROUTINE PGuess(PMAT,NBASIS)
+    integer :: NBASIS
+    real*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT
+
+    PMAT = 0.d0 ! Grande chute inicial  :) !
+
+END SUBROUTINE PGuess
+
+
+
+! FUNÇÕES ---------------------------------------------
+
+REAL*8 FUNCTION JIntegral(a,b,c,d)
+    REAL*8, intent(in) :: a,b,c,d
+    JIntegral = JKIntegrals(a,b,c,d)
+END FUNCTION JIntegral
+
+REAL*8 FUNCTION KIntegral(a,b,c,d)
+    REAL*8, intent(in) :: a,b,c,d
+    KIntegral = JKIntegrals(a,d,c,b)
+END FUNCTION KIntegral
 
 END MODULE DftOperations
 

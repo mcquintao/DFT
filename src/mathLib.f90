@@ -134,8 +134,6 @@ FUNCTION kinetic(alpha,beta)
 
 END FUNCTION kinetic
 
-
-
 FUNCTION intgPot(ZATOM,alpha,beta) 
 
     IMPLICIT NONE 
@@ -152,7 +150,6 @@ END FUNCTION intgPot
 
 real*8 function MULTMAT(A,B,n)
 
-
     implicit none
     real*8, dimension(n,n), intent(in) :: A, B
     dimension  MULTMAT(n,n)
@@ -168,5 +165,18 @@ real*8 function MULTMAT(A,B,n)
     end do
     
 end function MULTMAT
+
+
+real*8 function JKIntegrals(a,b,c,d)
+
+    REAL*8, intent(in) :: a, b, c, d
+    REAL*8 :: PI
+    PI = 4.D0*DATAN(1.D0)
+
+    JKIntegrals = 16.d0/SQRT(PI)
+    JKIntegrals = JKIntegrals*(a*b*c*d)**(3.d0/4.d0)
+    JKIntegrals = JKIntegrals/SQRT((a + c)*(b + d)*(a+b+c+d))
+
+end function JKIntegrals
 
 END MODULE MathLib
