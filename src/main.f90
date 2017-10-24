@@ -77,6 +77,8 @@ if(dbg) then
     call dbgPMat(PMAT,NBASIS)
 end if
 
+call scf(XMAT,HCORE,PMAT,CMAT,NBASIS)
+
 
 ! Fechar arquivos
 call closeFiles()

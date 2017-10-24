@@ -122,6 +122,16 @@ SUBROUTINE PGuess(PMAT,NBASIS)
 
 END SUBROUTINE PGuess
 
+! SUBROTINA SCF!! -----------------------------------
+
+
+
+
+
+
+
+
+
 
 
 ! FUNÇÕES ---------------------------------------------
