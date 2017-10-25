@@ -129,135 +129,164 @@ SUBROUTINE dbgInput(ZATOM,CHARGE,NBASIS,BASIS)
 
 END SUBROUTINE dbgInput
 
-
-SUBROUTINE dbgOverlap(SMAT,NBASIS)
+SUBROUTINE dbgMatrix(MAT,DIMM,TITLE,NC)
 
     IMPLICIT NONE
-    integer, intent(in) :: NBASIS
+    integer, intent(in) :: DIMM, NC
     integer :: i, j
-    real*8, dimension(NBASIS,NBASIS), intent(in) :: SMAT
+    real*8, dimension(DIMM,DIMM), intent(in) :: MAT
     character(len=20) :: string
+    character(len=NC) :: TITLE
+    write (string, '("(" I4, "f10.4)" )' )  DIMM
 
-    write (string, '("(" I4, "f7.4)" )' )  NBASIS
-
-    PRINT *, "DBG - dbgOverlap"    
-    write(99,*) "------OVERLAP MATRIX------"
+    PRINT *, "DBG - ", TITLE
+    write(99,*) "------",TITLE,"------"
     
-    do i=1,NBASIS
-        write(99,string) (SMAT(i,j), j=1,NBASIS)
+    do i=1,DIMM
+        write(99,string) (MAT(i,j), j=1,DIMM)
     end do
 
     write(99,*) "--------------------------"
     write(99,*)
     
 
-END SUBROUTINE dbgOverlap
-
-SUBROUTINE dbgTransference(XMAT,NBASIS)
-
-    IMPLICIT NONE
-    integer, intent(in) :: NBASIS
-    integer :: i, j
-    real*8, dimension(NBASIS,NBASIS), intent(in) :: XMAT
-    character(len=20) :: string
-
-    write (string, '("(" I4, "f10.4)" )' )  NBASIS
-
-    PRINT *, "DBG - dbgTransference"    
-    write(99,*) "------TRANSFERENCE MATRIX------"
-    
-    do i=1,NBASIS
-        write(99,string) (XMAT(i,j), j=1,NBASIS)
-    end do
-
-    write(99,*) "--------------------------"
-    write(99,*)
-    
-
-END SUBROUTINE dbgTransference
-
-SUBROUTINE dbgKinetic(TMAT,NBASIS)
-
-    IMPLICIT NONE
-    integer, intent(in) :: NBASIS
-    integer :: i, j
-    real*8, dimension(NBASIS,NBASIS), intent(in) :: TMAT
-    character(len=20) :: string
-
-    write (string, '("(" I4, "f9.4)" )' )  NBASIS
-
-    PRINT *, "DBG - dbgKinetic"    
-    write(99,*) "------KINETIC MATRIX------"
-    
-    do i=1,NBASIS
-        write(99,string) (TMAT(i,j), j=1,NBASIS)
-    end do
-
-    write(99,*) "--------------------------"
-    write(99,*)
-    
-
-END SUBROUTINE dbgKinetic
-
-
-SUBROUTINE dbgPotencial(UMAT,NBASIS) 
-    IMPLICIT NONE 
-    integer, intent(in) :: NBASIS 
-    integer :: i, j 
-    real*8, dimension(NBASIS,NBASIS), intent(in) :: UMAT 
-    character(len=20) :: string 
-
-    write (string, '("(" I4, "f9.4)" )' )  NBASIS 
-
-    PRINT *, "DBG - Potmat" 
-    write(99,*) "------Potencial MATRIX------" 
-
-    do i=1,NBASIS 
-        write(99,string) (UMAT(i,j), j=1,NBASIS) 
-    end do 
-
-    write(99,*) "--------------------------" 
-    write(99,*) 
-END SUBROUTINE dbgPotencial 
-
-SUBROUTINE dbgHcor(H,NBASIS) 
-    IMPLICIT NONE 
-    integer, intent(in) :: NBASIS 
-    integer :: i, j 
-    real*8, dimension(NBASIS,NBASIS), intent(in) :: H 
-    character(len=20) :: string 
-
-    write (string, '("(" I4, "f9.4)" )' )  NBASIS 
-
-    PRINT *, "DBG - HCore" 
-    write(99,*) "------HCore MATRIX------" 
-
-    do i=1,NBASIS 
-        write(99,string) (H(i,j), j=1,NBASIS) 
-    end do 
-
-    write(99,*) "--------------------------" 
-    write(99,*) 
-END SUBROUTINE dbgHcor
-
-SUBROUTINE dbgPMat(P,NBASIS) 
-    IMPLICIT NONE 
-    integer, intent(in) :: NBASIS 
-    integer :: i, j 
-    real*8, dimension(NBASIS,NBASIS), intent(in) :: P
-    character(len=20) :: string 
-
-    write (string, '("(" I4, "f9.4)" )' )  NBASIS 
-
-    PRINT *, "DBG - Density Matrix" 
-    write(99,*) "------DENSITY MATRIX------" 
-
-    do i=1,NBASIS 
-        write(99,string) (P(i,j), j=1,NBASIS) 
-    end do 
-
-    write(99,*) "--------------------------" 
-    write(99,*) 
-END SUBROUTINE dbgPMat
+END SUBROUTINE dbgMatrix
 
 END MODULE DiskOperations
+
+
+
+
+
+
+
+!SUBROUTINE dbgOverlap(SMAT,NBASIS,TITLE,NC)
+!
+!    IMPLICIT NONE
+!    integer, intent(in) :: NBASIS, NC
+!    integer :: i, j
+!    real*8, dimension(NBASIS,NBASIS), intent(in) :: SMAT
+!    character(len=20) :: string
+!    character(len=NC) :: TITLE
+!    write (string, '("(" I4, "f10.4)" )' )  NBASIS
+!
+!    PRINT *, "DBG - dbgOverlap"    
+!    write(99,*) "------",TITLE,"------"
+!    
+!    do i=1,NBASIS
+!        write(99,string) (SMAT(i,j), j=1,NBASIS)
+!    end do
+!
+!    write(99,*) "--------------------------"
+!    write(99,*)
+!    
+!
+!END SUBROUTINE dbgOverlap
+!
+!SUBROUTINE dbgTransference(XMAT,NBASIS)
+!
+!    IMPLICIT NONE
+!    integer, intent(in) :: NBASIS
+!    integer :: i, j
+!    real*8, dimension(NBASIS,NBASIS), intent(in) :: XMAT
+!    character(len=20) :: string
+!
+!    write (string, '("(" I4, "f10.4)" )' )  NBASIS
+!
+!    PRINT *, "DBG - dbgTransference"    
+!    write(99,*) "------TRANSFERENCE MATRIX------"
+!    
+!    do i=1,NBASIS
+!        write(99,string) (XMAT(i,j), j=1,NBASIS)
+!    end do
+!
+!    write(99,*) "--------------------------"
+!    write(99,*)
+!    
+!
+!END SUBROUTINE dbgTransference
+!
+!SUBROUTINE dbgKinetic(TMAT,NBASIS)
+!
+!    IMPLICIT NONE
+!    integer, intent(in) :: NBASIS
+!    integer :: i, j
+!    real*8, dimension(NBASIS,NBASIS), intent(in) :: TMAT
+!    character(len=20) :: string
+!
+!    write (string, '("(" I4, "f10.4)" )' )  NBASIS
+!
+!    PRINT *, "DBG - dbgKinetic"    
+!    write(99,*) "------KINETIC MATRIX------"
+!    
+!    do i=1,NBASIS
+!        write(99,string) (TMAT(i,j), j=1,NBASIS)
+!    end do
+!
+!    write(99,*) "--------------------------"
+!    write(99,*)
+!    
+!
+!END SUBROUTINE dbgKinetic
+!
+!
+!SUBROUTINE dbgPotencial(UMAT,NBASIS) 
+!    IMPLICIT NONE 
+!    integer, intent(in) :: NBASIS 
+!    integer :: i, j 
+!    real*8, dimension(NBASIS,NBASIS), intent(in) :: UMAT 
+!    character(len=20) :: string 
+!
+!    write (string, '("(" I4, "f10.4)" )' )  NBASIS 
+!
+!    PRINT *, "DBG - Potmat" 
+!    write(99,*) "------Potencial MATRIX------" 
+!
+!    do i=1,NBASIS 
+!        write(99,string) (UMAT(i,j), j=1,NBASIS) 
+!    end do 
+!
+!    write(99,*) "--------------------------" 
+!    write(99,*) 
+!END SUBROUTINE dbgPotencial 
+!
+!SUBROUTINE dbgHcor(H,NBASIS) 
+!    IMPLICIT NONE 
+!    integer, intent(in) :: NBASIS 
+!    integer :: i, j 
+!    real*8, dimension(NBASIS,NBASIS), intent(in) :: H 
+!    character(len=20) :: string 
+!
+!    write (string, '("(" I4, "f10.4)" )' )  NBASIS 
+!
+!    PRINT *, "DBG - HCore" 
+!    write(99,*) "------HCore MATRIX------" 
+!
+!    do i=1,NBASIS 
+!        write(99,string) (H(i,j), j=1,NBASIS) 
+!    end do 
+!
+!    write(99,*) "--------------------------" 
+!    write(99,*) 
+!END SUBROUTINE dbgHcor
+!
+!SUBROUTINE dbgPMat(P,NBASIS) 
+!    IMPLICIT NONE 
+!    integer, intent(in) :: NBASIS 
+!    integer :: i, j 
+!    real*8, dimension(NBASIS,NBASIS), intent(in) :: P
+!    character(len=20) :: string 
+!
+!    write (string, '("(" I4, "f10.4)" )' )  NBASIS 
+!
+!    PRINT *, "DBG - Density Matrix" 
+!    write(99,*) "------DENSITY MATRIX------" 
+!
+!    do i=1,NBASIS 
+!        write(99,string) (P(i,j), j=1,NBASIS) 
+!    end do 
+!
+!    write(99,*) "--------------------------" 
+!    write(99,*) 
+!END SUBROUTINE dbgPMat
+

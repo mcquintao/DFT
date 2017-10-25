@@ -148,25 +148,6 @@ FUNCTION intgPot(ZATOM,alpha,beta)
  
 END FUNCTION intgPot
 
-real*8 function MULTMAT(A,B,n)
-
-    implicit none
-    real*8, dimension(n,n), intent(in) :: A, B
-    dimension  MULTMAT(n,n)
-    integer :: i, j, k,n
-    
-    MULTMAT = 0.d0
-    do i=1,n
-        do j=1,n
-            do k=1,n
-                MULTMAT(i,j) = MULTMAT(i,j) + A(i,k)*B(k,j)
-            end do
-        end do
-    end do
-    
-end function MULTMAT
-
-
 real*8 function JKIntegrals(a,b,c,d)
 
     REAL*8, intent(in) :: a, b, c, d

@@ -122,15 +122,109 @@ SUBROUTINE PGuess(PMAT,NBASIS)
 
 END SUBROUTINE PGuess
 
+
+
+SUBROUTINE TransfFMAT(FMAT,XMAT,NBASIS)
+    INTEGER, intent(in) :: NBASIS
+    REAL*8, dimension(NBASIS,NBASIS), intent(in) :: XMAT
+    REAL*8, dimension(NBASIS,NBASIS), intent(inout) :: FMAT
+    REAL*8, dimension(NBASIS,NBASIS) :: TXMAT
+
+    TXMAT = TRANSPOSE(XMAT)
+    FMAT = MATMUL(TXMAT,MATMUL(FMAT,XMAT))
+
+END SUBROUTINE TransfFMAT
+
+SUBROUTINE newDensity(CMAT,P,NBASIS,NE)
+    INTEGER, intent(in) :: NBASIS, NE
+    INTEGER :: i, j, a
+    REAL*8, dimension(NBASIS,NBASIS), intent(in) :: CMAT
+    REAL*8, dimension(NBASIS,NBASIS), intent(out) :: P
+
+    P = 0.d0
+    DO i=1,NBASIS
+        DO j=1,NBASIS
+            DO a=1,NE/2
+                P(i,j) = P(i,j) + 2.d0 * CMAT(i,a)*CMAT(a,j)  !! PAG. 139 EQ:3.145; SZABO (CONFERIR TRANSPOSTA)
+            END DO
+        END DO
+    END DO
+
+
+END SUBROUTINE newDensity
+
 ! SUBROTINA SCF!! -----------------------------------
 
+SUBROUTINE SCF(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT)
+    REAL*8, PARAMETER :: Tol = 1.0E-12
+    INTEGER, intent(in) :: NBASIS, NE
+    INTEGER :: i,j,k,l,loop
+    REAL*8, dimension(NBASIS), intent(in) :: BASIS
+    REAL*8, dimension(NBASIS,NBASIS), intent(in) :: HCORE
+    REAL*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT, CMAT
+    REAL*8, dimension(NBASIS,NBASIS) :: XMAT, FMAT, GMAT, XFMAT, NewPMAT
+    REAL*8 :: a,b,c,d
 
+    NewPMAT = 0.d0
 
+    DO loop=1,10
+    
+    PRINT *, "SCF Cycle ", loop
 
+    XFMAT   = 0.d0
+    GMAT    = 0.d0
+    FMAT    = 0.d0
 
+    DO i=1,NBASIS
+        a = BASIS(i)
+        DO j=1,NBASIS
+            b = BASIS(j)
 
+            DO k=1,NBASIS
+                c = BASIS(k)
+                DO l=1,NBASIS
+                    d = BASIS(l)
+                    GMAT(i,j) = GMAT(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d) - 0.5d0*KIntegral(a,b,c,d))
+                END DO
+            END DO
 
+        END DO
+    END DO
 
+    call dbgMatrix(GMAT,NBASIS,"G MATRIX",8)
+    
+    DO i=1,NBASIS
+        DO j=1,NBASIS
+            FMAT(i,j) = HCORE(i,j) + GMAT(i,j)
+        END DO
+    END DO
+
+call dbgMatrix(FMAT,NBASIS,"F MATRIX",8)
+
+    call TransfFMAT(FMAT,XMAT,NBASIS)  ! FMAT = XMAT' * FMAT * XMAT
+    
+call dbgMatrix(FMAT,NBASIS,"XF MATRIX",9)
+
+    call FLUSH(99)
+    
+    call JACOBI(FMAT,CMAT,Tol,NBASIS) ! FMAT -> ENERGY(A. VAL); CMAT -> XCOEFF(A. VEC)
+    
+call dbgMatrix(FMAT,NBASIS,"ENERGY MATRIX",13)
+call dbgMatrix(CMAT,NBASIS,"XCOEFF MATRIX",13)
+
+    CMAT = MATMUL(XMAT,CMAT)
+
+call dbgMatrix(CMAT,NBASIS,"COEFF MATRIX",12)
+
+    call newDensity(CMAT,NewPMAT,NBASIS,NE)
+
+call dbgMatrix(NewPMAT,NBASIS,"NEW DENSITY MATRIX",18)
+
+    PMAT = NewPMAT
+
+    END DO
+
+END SUBROUTINE SCF
 
 
 
@@ -145,6 +239,15 @@ REAL*8 FUNCTION KIntegral(a,b,c,d)
     REAL*8, intent(in) :: a,b,c,d
     KIntegral = JKIntegrals(a,d,c,b)
 END FUNCTION KIntegral
+
+REAL*8 FUNCTION G(a,b,P,NB)
+
+    INTEGER :: a, b, NB, i, j
+    REAL*8, dimension(NB,NB) :: P
+
+    
+
+END FUNCTION G
 
 END MODULE DftOperations
 
