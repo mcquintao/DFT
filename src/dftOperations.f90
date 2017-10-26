@@ -145,7 +145,7 @@ SUBROUTINE newDensity(CMAT,P,NBASIS,NE)
     DO i=1,NBASIS
         DO j=1,NBASIS
             DO a=1,NE/2
-                P(i,j) = P(i,j) + 2.d0 * CMAT(i,a)*CMAT(a,j)  !! PAG. 139 EQ:3.145; SZABO (CONFERIR TRANSPOSTA)
+                P(i,j) = P(i,j) + 2.d0 * CMAT(i,a)*CMAT(j,a)  !! PAG. 139 EQ:3.145; SZABO (CONFERIR TRANSPOSTA)
             END DO
         END DO
     END DO
@@ -167,14 +167,14 @@ SUBROUTINE SCF(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT)
 
     NewPMAT = 0.d0
 
-    DO loop=1,10
+    DO loop=1,100
     
     PRINT *, "SCF Cycle ", loop
 
     XFMAT   = 0.d0
     GMAT    = 0.d0
     FMAT    = 0.d0
-
+!    PMAT    = 1.0d0
     DO i=1,NBASIS
         a = BASIS(i)
         DO j=1,NBASIS
@@ -210,6 +210,10 @@ call dbgMatrix(FMAT,NBASIS,"XF MATRIX",9)
     call JACOBI(FMAT,CMAT,Tol,NBASIS) ! FMAT -> ENERGY(A. VAL); CMAT -> XCOEFF(A. VEC)
     
 call dbgMatrix(FMAT,NBASIS,"ENERGY MATRIX",13)
+
+    WRITE(99,*) 'AUTO VALOR: ', (FMAT(i,i), i=1,NBASIS)
+    call FLUSH(99)
+    
 call dbgMatrix(CMAT,NBASIS,"XCOEFF MATRIX",13)
 
     CMAT = MATMUL(XMAT,CMAT)
