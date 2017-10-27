@@ -81,7 +81,6 @@ SUBROUTINE kineticMatrix(BASIS,NBASIS,TMAT)
 
 END SUBROUTINE kineticMatrix
 
-
 SUBROUTINE potentialMatrix(ZATOM,BASIS,NBASIS,Potmat) 
     IMPLICIT NONE 
 
@@ -150,8 +149,25 @@ SUBROUTINE newDensity(CMAT,P,NBASIS,NE)
         END DO
     END DO
 
-
 END SUBROUTINE newDensity
+
+
+
+REAL*8 FUNCTION ENERGY(H,F,P,NB)
+    
+    INTEGER, intent(in) :: NB
+    INTEGER :: i, j
+    REAL*8, dimension(NB,NB), intent(in) :: H, F, P
+    
+    ENERGY = 0.d0
+    DO i = 1, NB
+        DO j = 1, NB
+            ENERGY = 0.5D0 * P(j,i)*(H(i,j) + F(i,j)) !! PAG. 150 EQ: 3.184; SZABO. P(j,i) => Eh isso msm ??
+        END DO
+    END DO
+
+END FUNCTION ENERGY
+
 
 ! SUBROTINA SCF!! -----------------------------------
 
@@ -163,8 +179,9 @@ SUBROUTINE SCF(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT)
     REAL*8, dimension(NBASIS,NBASIS), intent(in) :: HCORE
     REAL*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT, CMAT
     REAL*8, dimension(NBASIS,NBASIS) :: XMAT, FMAT, GMAT, XFMAT, NewPMAT
-    REAL*8 :: a,b,c,d
+    REAL*8 :: a,b,c,d, TotEnergy
 
+    TotEnergy = 0.d0
     NewPMAT = 0.d0
 
     DO loop=1,100
@@ -201,19 +218,16 @@ SUBROUTINE SCF(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT)
 
 call dbgMatrix(FMAT,NBASIS,"F MATRIX",8)
 
-    call TransfFMAT(FMAT,XMAT,NBASIS)  ! FMAT = XMAT' * FMAT * XMAT
+    XFMAT = FMAT
+    call TransfFMAT(XFMAT,XMAT,NBASIS)  ! XFMAT = XMAT' * FMAT * XMAT
     
-call dbgMatrix(FMAT,NBASIS,"XF MATRIX",9)
+call dbgMatrix(XFMAT,NBASIS,"XF MATRIX",9)
 
     call FLUSH(99)
     
-    call JACOBI(FMAT,CMAT,Tol,NBASIS) ! FMAT -> ENERGY(A. VAL); CMAT -> XCOEFF(A. VEC)
+    call JACOBI(XFMAT,CMAT,Tol,NBASIS) ! XFMAT -> ENERGY(A. VAL); CMAT -> XCOEFF(A. VEC)
     
-call dbgMatrix(FMAT,NBASIS,"ENERGY MATRIX",13)
-
-    WRITE(99,*) 'AUTO VALOR: ', (FMAT(i,i), i=1,NBASIS)
-    call FLUSH(99)
-    
+call dbgMatrix(XFMAT,NBASIS,"ENERGY MATRIX",13)
 call dbgMatrix(CMAT,NBASIS,"XCOEFF MATRIX",13)
 
     CMAT = MATMUL(XMAT,CMAT)
@@ -226,8 +240,29 @@ call dbgMatrix(NewPMAT,NBASIS,"NEW DENSITY MATRIX",18)
 
     PMAT = NewPMAT
 
+
+    TotEnergy = ENERGY(HCORE,FMAT,PMAT,NBASIS)
+    
+
+    PRINT *, "--------------------------------"
+    PRINT *, "TOTAL ENERGY: ", TotEnergy
+    PRINT *, "--------------------------------"
+
+    IF(ABS(TotEnergy - OldEnergy).lt.10E-4) THEN
+        GOTO 150
+    END IF
+
+    OldEnergy = TotEnergy
+
     END DO
 
+100 PRINT *, "O CICLO SCF NÃO CONVERGIU"
+GOTO 200
+
+150 PRINT *, "O CICLO SCF CONVERGIU!"
+GOTO 200
+
+200 PRINT *, "FIM DO SCF"
 END SUBROUTINE SCF
 
 
@@ -248,8 +283,6 @@ REAL*8 FUNCTION G(a,b,P,NB)
 
     INTEGER :: a, b, NB, i, j
     REAL*8, dimension(NB,NB) :: P
-
-    
 
 END FUNCTION G
 

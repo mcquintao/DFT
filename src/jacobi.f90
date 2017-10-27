@@ -1,7 +1,3 @@
-MODULE JACOBI
-
-CONTAINS
-
 ! Subrotina Jacobi
 !
 ! Retirada do Numerical Recipes - Pag-460
@@ -20,7 +16,7 @@ CONTAINS
 ! V => Autovetores de A.
 !
 
-      Subroutine Jacobi(A,N,NP,D,V,Nrot)
+      Subroutine JacobiH(A,N,NP,D,V,Nrot)
       INTEGER n,np,nrot,NMAX
       REAL*8 A(np,np),d(np),V(np,np)
       PARAMETER (NMAX=500)
@@ -148,7 +144,7 @@ CONTAINS
 102    CONTINUE
        Call EIGSRT(d,v,n,np)
 
-       END  
+       END 
 
 ! Subrotina para ordenar os auovalores de Jacobi.(Ordem decrescente)
 
@@ -177,5 +173,3 @@ CONTAINS
          ENDIF
        ENDDO
        END
-
-END MODULE JACOBI
