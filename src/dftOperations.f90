@@ -39,11 +39,12 @@ SUBROUTINE TransferenceMatrix(NBASIS,SMAT,XMAT)
 IMPLICIT NONE
 
 REAL*8, PARAMETER :: Tol = 1.0E-12
-INTEGER :: i, j
+INTEGER :: i, j, Nrot
 INTEGER, INTENT(IN) :: NBASIS
 REAL*8, DIMENSION(NBASIS,NBASIS), INTENT(IN) :: SMAT
 REAL*8, DIMENSION(NBASIS,NBASIS), INTENT(OUT) :: XMAT
 REAL*8, DIMENSION(NBASIS,NBASIS) :: LOCAL_SMAT, SMAT_VEC
+REAL*8, DIMENSION(NBASIS) :: EVALUES
 REAL*8 WALBER
 
 LOCAL_SMAT = SMAT
@@ -51,10 +52,12 @@ XMAT = 0.0D0
 SMAT_VEC = 0.0D0
 WALBER = 0.0D0
 
-CALL JACOBI(LOCAL_SMAT,SMAT_VEC,Tol,NBASIS)
+! CALL JACOBI(LOCAL_SMAT,SMAT_VEC,Tol,NBASIS)
+call Jacobi(LOCAL_SMAT,NBASIS,NBASIS,EVALUES,SMAT_VEC,Nrot)
 
 DO j = 1,NBASIS
-    WALBER = SQRT(LOCAL_SMAT(j,j))  ! AUTO VALORES
+!    WALBER = SQRT(LOCAL_SMAT(j,j))  ! AUTO VALORES
+    WALBER = SQRT(EVALUES(j))  ! AUTO VALORES
     WALBER = 1.0d0/WALBER
     DO i = 1, NBASIS                ! AUTO VETORES
         XMAT(i,j) = SMAT_VEC(i,j)*WALBER
@@ -162,7 +165,7 @@ REAL*8 FUNCTION ENERGY(H,F,P,NB)
     ENERGY = 0.d0
     DO i = 1, NB
         DO j = 1, NB
-            ENERGY = 0.5D0 * P(j,i)*(H(i,j) + F(i,j)) !! PAG. 150 EQ: 3.184; SZABO. P(j,i) => Eh isso msm ??
+            ENERGY = ENERGY + 0.5D0 * P(j,i)*(H(i,j) + F(i,j)) !! PAG. 150 EQ: 3.184; SZABO. P(j,i) => Eh isso msm ??
         END DO
     END DO
 
@@ -174,15 +177,17 @@ END FUNCTION ENERGY
 SUBROUTINE SCF(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT)
     REAL*8, PARAMETER :: Tol = 1.0E-12
     INTEGER, intent(in) :: NBASIS, NE
-    INTEGER :: i,j,k,l,loop
+    INTEGER :: i,j,k,l,loop, Nrot
     REAL*8, dimension(NBASIS), intent(in) :: BASIS
     REAL*8, dimension(NBASIS,NBASIS), intent(in) :: HCORE
     REAL*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT, CMAT
     REAL*8, dimension(NBASIS,NBASIS) :: XMAT, FMAT, GMAT, XFMAT, NewPMAT
-    REAL*8 :: a,b,c,d, TotEnergy
+    REAL*8, DIMENSION(NBASIS) :: EVALUES
+    REAL*8 :: a,b,c,d, TotEnergy, oldenergy
 
     TotEnergy = 0.d0
     NewPMAT = 0.d0
+    OldEnergy = 1000.00
 
     DO loop=1,100
     
@@ -196,12 +201,11 @@ SUBROUTINE SCF(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT)
         a = BASIS(i)
         DO j=1,NBASIS
             b = BASIS(j)
-
             DO k=1,NBASIS
                 c = BASIS(k)
                 DO l=1,NBASIS
                     d = BASIS(l)
-                    GMAT(i,j) = GMAT(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d) - 0.5d0*KIntegral(a,b,c,d))
+                    GMAT(i,j) = GMAT(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d)  - 0.5d0*KIntegral(a,b,c,d))
                 END DO
             END DO
 
@@ -225,12 +229,22 @@ call dbgMatrix(XFMAT,NBASIS,"XF MATRIX",9)
 
     call FLUSH(99)
     
-    call JACOBI(XFMAT,CMAT,Tol,NBASIS) ! XFMAT -> ENERGY(A. VAL); CMAT -> XCOEFF(A. VEC)
+!    call JACOBI(XFMAT,CMAT,Tol,NBASIS) ! XFMAT -> ENERGY(A. VAL); CMAT -> XCOEFF(A. VEC)
+     call Jacobi(XFMAT,NBASIS,NBASIS,EVALUES,CMAT,Nrot) 
     
-call dbgMatrix(XFMAT,NBASIS,"ENERGY MATRIX",13)
+     write(99,*) "auto valores" 
+     write(99,*) (Evalues(i),i=1,NBASIS) 
+     XFMAT = 0.0
+     do i = 1, NBASIS
+        XFMAT(i,i) = EVALUES(i)
+     ENDDO
+
+
+!call dbgMatrix(XFMAT,NBASIS,"ENERGY MATRIX",13)
 call dbgMatrix(CMAT,NBASIS,"XCOEFF MATRIX",13)
 
     CMAT = MATMUL(XMAT,CMAT)
+
 
 call dbgMatrix(CMAT,NBASIS,"COEFF MATRIX",12)
 
@@ -238,11 +252,15 @@ call dbgMatrix(CMAT,NBASIS,"COEFF MATRIX",12)
 
 call dbgMatrix(NewPMAT,NBASIS,"NEW DENSITY MATRIX",18)
 
-    PMAT = NewPMAT
+    if (loop < 2) then
+      PMAT = NewPMAT
+    else
+      PMAT = 0.6*PMAT + 0.4*NEWPMAT
+    ENDIF
 
 
     TotEnergy = ENERGY(HCORE,FMAT,PMAT,NBASIS)
-    
+    WRITE(99,*) "Energia Total:", TotEnergy    
 
     PRINT *, "--------------------------------"
     PRINT *, "TOTAL ENERGY: ", TotEnergy
