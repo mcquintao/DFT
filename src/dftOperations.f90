@@ -142,13 +142,17 @@ SUBROUTINE newDensity(CMAT,P,NBASIS,NE)
     INTEGER :: i, j, a
     REAL*8, dimension(NBASIS,NBASIS), intent(in) :: CMAT
     REAL*8, dimension(NBASIS,NBASIS), intent(out) :: P
-
+    
     P = 0.d0
     DO i=1,NBASIS
         DO j=1,NBASIS
-            DO a=1,NE/2
-                P(i,j) = P(i,j) + 2.d0 * CMAT(i,a)*CMAT(j,a)  !! PAG. 139 EQ:3.145; SZABO (CONFERIR TRANSPOSTA)
-            END DO
+            IF(NE.eq.1) THEN
+                P(i,j) = P(i,j) + 1.d0 * CMAT(i,1)*CMAT(j,1)  !! PAG. 139 EQ:3.145; SZABO (CONFERIR TRANSPOSTA)
+            ELSE
+                DO a=1,NE/2
+                    P(i,j) = P(i,j) + 2.d0 * CMAT(i,a)*CMAT(j,a)  !! PAG. 139 EQ:3.145; SZABO (CONFERIR TRANSPOSTA)
+                END DO
+            END IF
         END DO
     END DO
 
@@ -205,7 +209,11 @@ SUBROUTINE SCF(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT)
                 c = BASIS(k)
                 DO l=1,NBASIS
                     d = BASIS(l)
-                    GMAT(i,j) = GMAT(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d)  - 0.5d0*KIntegral(a,b,c,d))
+                    IF(NE.eq.1) THEN
+                        GMAT(i,j) = GMAT(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d)  - 1.0d0*KIntegral(a,b,c,d))
+                    ELSE
+                        GMAT(i,j) = GMAT(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d)  - 0.5d0*KIntegral(a,b,c,d))
+                    END IF
                 END DO
             END DO
 
@@ -266,7 +274,7 @@ call dbgMatrix(NewPMAT,NBASIS,"NEW DENSITY MATRIX",18)
     PRINT *, "TOTAL ENERGY: ", TotEnergy
     PRINT *, "--------------------------------"
 
-    IF(ABS(TotEnergy - OldEnergy).lt.10E-4) THEN
+    IF(ABS(TotEnergy - OldEnergy).lt.10E-6) THEN
         GOTO 150
     END IF
 
