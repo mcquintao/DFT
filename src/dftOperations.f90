@@ -191,6 +191,26 @@ REAL*8 FUNCTION ENERGY(H,F,P,NB)
 
 END FUNCTION ENERGY
 
+
+REAL*8 FUNCTION ENERGYOPEN(H,FA,FB,PA,PB,NB)
+    INTEGER, intent(in) :: NB
+    INTEGER :: i, j
+    REAL*8, dimension(NB,NB), intent(in) :: H, FA, FB, PA, PB
+    REAL*8, dimension(NB,NB) :: P
+    
+    P = PA + PB
+    ENERGYOPEN = 0.d0
+    DO i = 1, NB
+        DO j = 1, NB
+            ENERGYOPEN = ENERGYOPEN + 0.5D0 * (P(j,i)*H(i,j) + PA(j,i)*FA(i,j) + PB(j,i)*FB(i,j)) !! PAG. 215 EQ: 3.184; SZABO. P(j,i) => Eh isso msm ??
+        END DO
+    END DO
+
+END FUNCTION ENERGYOPEN
+
+
+
+
 ! SUBROTINA SCF!! -----------------------------------
 
 SUBROUTINE SCFCLOSE(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT,TotEnergy)
@@ -308,29 +328,39 @@ GOTO 200
 
 END SUBROUTINE SCFCLOSE
 
-SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT,Totenergy)
+SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT_ALFA,CMAT_BETA,Totenergy)
     REAL*8, PARAMETER :: Tol = 1.0E-12
-    INTEGER, intent(in) :: NBASIS, NE
-    INTEGER :: i,j,k,l,loop, Nrot
+    INTEGER, intent(in) :: NBASIS 
+    INTEGER :: i,j,k,l,loop, Nrot, NALFA, NBETA
     REAL*8, dimension(NBASIS), intent(in) :: BASIS
     REAL*8, dimension(NBASIS,NBASIS), intent(in) :: HCORE
-    REAL*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT, CMAT
-    REAL*8, dimension(NBASIS,NBASIS) :: XMAT, FMAT, GMAT, XFMAT, NewPMAT
-    REAL*8, DIMENSION(NBASIS) :: EVALUES
+    REAL*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT, CMAT_ALFA, CMAT_BETA
+    REAL*8, dimension(NBASIS,NBASIS) :: XMAT, FMAT_ALFA, FMAT_BETA, GALFA, GBETA, XFMAT_ALFA, XFMAT_BETA, PALFA, PBETA
+    REAL*8, dimension(NBASIS,NBASIS) :: NewPMAT_ALFA, NewPMAT_BETA
+    REAL*8, DIMENSION(NBASIS) :: EVALUES_ALFA, EVALUES_BETA
     REAL*8 :: a,b,c,d, oldenergy
     REAL*8, intent(out) :: TotEnergy
 
     TotEnergy = 0.d0
-    NewPMAT = 0.d0
+    NewPMAT_ALFA = 0.d0
+    NewPMAT_BETA = 0.d0
     OldEnergy = 1000.00
+
+    NALFA = NE/2
+    NBETA = NALFA + MOD(NE,2)
+    PALFA = 0.d0
+    PBETA = 0.d0
 
     DO loop=1,100
     
     PRINT *, "SCF Cycle ", loop
 
-    XFMAT   = 0.d0
-    GMAT    = 0.d0
-    FMAT    = 0.d0
+    XFMAT_ALFA   = 0.d0
+    XFMAT_BETA   = 0.d0
+    GALFA        = 0.d0
+    GBETA        = 0.d0
+    FMAT_ALFA    = 0.d0
+    FMAT_BETA    = 0.d0
 !    PMAT    = 1.0d0
     DO i=1,NBASIS
         a = BASIS(i)
@@ -340,61 +370,71 @@ SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT,Totenergy)
                 c = BASIS(k)
                 DO l=1,NBASIS
                     d = BASIS(l)
-                    GMAT(i,j) = GMAT(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d)  - 1.0d0*KIntegral(a,b,c,d))
+                    GALFA(i,j) = GALFA(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d))  - PALFA(k,l)*(KIntegral(a,b,c,d))
+                    GBETA(i,j) = GBETA(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d))  - PBETA(k,l)*(KIntegral(a,b,c,d))
                 END DO
             END DO
 
         END DO
     END DO
 
-    call dbgMatrix(GMAT,NBASIS,"G MATRIX",8)
+!call dbgMatrix(GMAT,NBASIS,"G MATRIX",8)
     
-    DO i=1,NBASIS
-        DO j=1,NBASIS
-            FMAT(i,j) = HCORE(i,j) + GMAT(i,j)
-        END DO
-    END DO
+    FMAT_ALFA = HCORE + GALFA
+    FMAT_BETA = HCORE + GBETA
 
-call dbgMatrix(FMAT,NBASIS,"F MATRIX",8)
+!call dbgMatrix(FMAT,NBASIS,"F MATRIX",8)
 
-    XFMAT = FMAT
-    call TransfFMAT(XFMAT,XMAT,NBASIS)  ! XFMAT = XMAT' * FMAT * XMAT
+    XFMAT_ALFA = FMAT_ALFA
+    XFMAT_BETA = FMAT_BETA
+    call TransfFMAT(XFMAT_ALFA,XMAT,NBASIS)  ! XFMAT = XMAT' * FMAT * XMAT
+    call TransfFMAT(XFMAT_BETA,XMAT,NBASIS)  ! XFMAT = XMAT' * FMAT * XMAT
     
-call dbgMatrix(XFMAT,NBASIS,"XF MATRIX",9)
+!call dbgMatrix(XFMAT,NBASIS,"XF MATRIX",9)
 
     call FLUSH(99)
     
 !    call JACOBI(XFMAT,CMAT,Tol,NBASIS) ! XFMAT -> ENERGY(A. VAL); CMAT -> XCOEFF(A. VEC)
-     call Jacobi(XFMAT,NBASIS,NBASIS,EVALUES,CMAT,Nrot) 
+
+     call Jacobi(XFMAT_ALFA,NBASIS,NBASIS,EVALUES_ALFA,CMAT_ALFA,Nrot) 
+     call Jacobi(XFMAT_BETA,NBASIS,NBASIS,EVALUES_BETA,CMAT_BETA,Nrot) 
     
-     write(99,*) "auto valores" 
-     write(99,*) (Evalues(i),i=1,NBASIS) 
-     XFMAT = 0.0
+!     write(99,*) "auto valores" 
+!     write(99,*) (Evalues(i),i=1,NBASIS) 
+     XFMAT_ALFA = 0.0
+     XFMAT_BETA = 0.0
      do i = 1, NBASIS
-        XFMAT(i,i) = EVALUES(i)
+        XFMAT_ALFA(i,i) = EVALUES_ALFA(i)
+        XFMAT_BETA(i,i) = EVALUES_BETA(i)
      ENDDO
 
 
 !call dbgMatrix(XFMAT,NBASIS,"ENERGY MATRIX",13)
-call dbgMatrix(CMAT,NBASIS,"XCOEFF MATRIX",13)
+!call dbgMatrix(CMAT,NBASIS,"XCOEFF MATRIX",13)
 
-    CMAT = MATMUL(XMAT,CMAT)
+    CMAT_ALFA = MATMUL(XMAT,CMAT_ALFA)
+    CMAT_BETA = MATMUL(XMAT,CMAT_BETA)
 
 
-call dbgMatrix(CMAT,NBASIS,"COEFF MATRIX",12)
+!call dbgMatrix(CMAT,NBASIS,"COEFF MATRIX",12)
 
-    call newDensityOpen(CMAT,NewPMAT,NBASIS,NE)
+    call newDensityOpen(CMAT_ALFA,NewPMAT_ALFA,NBASIS,NALFA)
+    call newDensityOpen(CMAT_BETA,NewPMAT_BETA,NBASIS,NBETA)
 
-call dbgMatrix(NewPMAT,NBASIS,"NEW DENSITY MATRIX",18)
+!call dbgMatrix(NewPMAT,NBASIS,"NEW DENSITY MATRIX",18)
 
     if (loop < 2) then
-      PMAT = NewPMAT
+      PALFA = NewPMAT_ALFA
+      PBETA = NewPMAT_BETA
+      PMAT = PALFA + PBETA
     else
-      PMAT = 0.6*PMAT + 0.4*NEWPMAT
+      PALFA = 0.6*PALFA + 0.4*NewPMAT_ALFA
+      PBETA = 0.6*PBETA + 0.4*NewPMAT_BETA
+      PMAT = PALFA + PBETA
     ENDIF
 
+    TotEnergy = ENERGYOPEN(HCORE,FMAT_ALFA,FMAT_BETA,NewPMAT_ALFA,NewPMAT_BETA,NBASIS)
 
-    TotEnergy = ENERGY(HCORE,FMAT,PMAT,NBASIS)
     WRITE(99,*) "Energia Total:", TotEnergy    
 
     PRINT *, "--------------------------------"
