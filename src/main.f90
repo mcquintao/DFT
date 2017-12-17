@@ -6,7 +6,7 @@ PROGRAM main
     
     logical :: dbg, openShell
     integer :: ZATOM, CHARGE, NBASIS, NE, NALFA, NBETA
-    real*8 :: TOTENERGY
+    real*8 :: TOTENERGY, mix
     real*8, allocatable :: BASIS(:)
     real*8, allocatable :: SMAT(:,:), XMAT(:,:), TMAT(:,:), UMAT(:,:)
     real*8, allocatable :: HCORE(:,:), PMAT(:,:), CMAT(:,:), CMAT_ALFA(:,:), CMAT_BETA(:,:)
@@ -19,10 +19,10 @@ PROGRAM main
     dbg = .false.
     openShell = .false.
     TOTENERGY = 0.d0
-
+    mix = 0.d0
 ! Carregar input
 call openFiles()
-call readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg,openShell)
+call readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg,openShell,mix)
 
 NE = ZATOM - CHARGE
 ALLOCATE(SMAT(1:NBASIS,1:NBASIS))
@@ -98,13 +98,13 @@ if(dbg) then
 end if
 
 IF(openShell) THEN
-    call scfOpen(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT_ALFA,CMAT_BETA,TOTENERGY)
+    call scfOpen(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,TOTENERGY)
     PRINT *, "----------------------------------------------------"
     PRINT *, "OPEN SHELL TOTAL ENERGY (HARTREE): ", TOTENERGY
     PRINT *, "OPEN SHELL TOTAL ENERGY (KJ/MOL): ", TOTENERGY*2625.5
     PRINT *, "----------------------------------------------------"
 ELSE
-    call scfClose(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT,TOTENERGY)
+    call scfClose(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT,TOTENERGY)
     PRINT *, "----------------------------------------------------"
     PRINT *, "CLOSE SHELL TOTAL ENERGY: ", TOTENERGY
     PRINT *, "CLOSE SHELL TOTAL ENERGY (KJ/MOL): ", TOTENERGY*2625.5

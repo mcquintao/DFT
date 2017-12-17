@@ -213,7 +213,7 @@ END FUNCTION ENERGYOPEN
 
 ! SUBROTINA SCF!! -----------------------------------
 
-SUBROUTINE SCFCLOSE(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT,TotEnergy)
+SUBROUTINE SCFCLOSE(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT,TotEnergy)
     REAL*8, PARAMETER :: Tol = 1.0E-12
     INTEGER, intent(in) :: NBASIS, NE
     INTEGER :: i,j,k,l,loop, Nrot
@@ -223,6 +223,7 @@ SUBROUTINE SCFCLOSE(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT,TotEnergy)
     REAL*8, dimension(NBASIS,NBASIS) :: XMAT, FMAT, GMAT, XFMAT, NewPMAT
     REAL*8, DIMENSION(NBASIS) :: EVALUES
     REAL*8 :: a,b,c,d, oldenergy
+    REAL*8, intent(in) :: mix
     REAL*8, intent(out) :: TotEnergy
 
     TotEnergy = 0.d0
@@ -299,7 +300,7 @@ call dbgMatrix(NewPMAT,NBASIS,"NEW DENSITY MATRIX",18)
     if (loop < 2) then
       PMAT = NewPMAT
     else
-      PMAT = 0.6*PMAT + 0.4*NEWPMAT
+      PMAT = mix*PMAT + (1 - mix)*NEWPMAT
     ENDIF
 
 
@@ -328,7 +329,7 @@ GOTO 200
 
 END SUBROUTINE SCFCLOSE
 
-SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT_ALFA,CMAT_BETA,Totenergy)
+SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,Totenergy)
     REAL*8, PARAMETER :: Tol = 1.0E-12
     INTEGER, intent(in) :: NBASIS 
     INTEGER :: i,j,k,l,loop, Nrot, NALFA, NBETA
@@ -339,6 +340,7 @@ SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT_ALFA,CMAT_BETA,Totenergy
     REAL*8, dimension(NBASIS,NBASIS) :: NewPMAT_ALFA, NewPMAT_BETA
     REAL*8, DIMENSION(NBASIS) :: EVALUES_ALFA, EVALUES_BETA
     REAL*8 :: a,b,c,d, oldenergy
+    REAL*8, intent(in) :: mix
     REAL*8, intent(out) :: TotEnergy
 
     TotEnergy = 0.d0
@@ -428,8 +430,8 @@ SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT_ALFA,CMAT_BETA,Totenergy
       PBETA = NewPMAT_BETA
       PMAT = PALFA + PBETA
     else
-      PALFA = 0.6*PALFA + 0.4*NewPMAT_ALFA
-      PBETA = 0.6*PBETA + 0.4*NewPMAT_BETA
+      PALFA = mix*PALFA + (1 - mix)*NewPMAT_ALFA
+      PBETA = mix*PBETA + (1 - mix)*NewPMAT_BETA
       PMAT = PALFA + PBETA
     ENDIF
 

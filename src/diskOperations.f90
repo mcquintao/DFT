@@ -59,7 +59,7 @@ close(99)
 
 END SUBROUTINE closeFiles
 
-SUBROUTINE readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg,openShell)
+SUBROUTINE readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg,openShell,mix)
 
 !   Subrotina para ler input
 !   Matheus Campos Quintão
@@ -72,20 +72,21 @@ SUBROUTINE readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg,openShell)
 
 !INPUT EXEMPLO (SEM EXCLAMAÇÃO!!):
 
-! 3 0 4 .true./.false.   (ZATOM, CHARGE, NBASIS, SHELL)
-! 10                     (BASE 1)
-! 20                     (BASE 2)
-! 30                     (BASE 3)
-! 40                     (BASE 4)
+! 3 0 4 .true./.false. mix   (ZATOM, CHARGE, NBASIS, SHELL, MIX)
+! 10                         (BASE 1)
+! 20                         (BASE 2)
+! 30                         (BASE 3)
+! 40                         (BASE 4)
 
     IMPLICIT NONE
     logical, intent(out) :: dbg, openShell
     integer, intent(out) :: ZATOM, CHARGE, NBASIS
     integer :: i, j
     real*8, allocatable :: BASIS(:)
+    real*8, intent(out) :: mix
 
 ! ler a primeira linha do input
-    read(1,*) ZATOM, CHARGE, NBASIS, openShell
+    read(1,*) ZATOM, CHARGE, NBASIS, openShell, mix
 
 ! Alocação dinâmica de memória para o vetor de bases
     ALLOCATE(BASIS(1:NBASIS))
