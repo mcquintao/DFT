@@ -137,7 +137,7 @@ SUBROUTINE TransfFMAT(FMAT,XMAT,NBASIS)
 
 END SUBROUTINE TransfFMAT
 
-SUBROUTINE newDensity(CMAT,P,NBASIS,NE)
+SUBROUTINE newDensityClose(CMAT,P,NBASIS,NE)
     INTEGER, intent(in) :: NBASIS, NE
     INTEGER :: i, j, a
     REAL*8, dimension(NBASIS,NBASIS), intent(in) :: CMAT
@@ -156,8 +156,24 @@ SUBROUTINE newDensity(CMAT,P,NBASIS,NE)
         END DO
     END DO
 
-END SUBROUTINE newDensity
+END SUBROUTINE newDensityClose
 
+SUBROUTINE newDensityOpen(CMAT,P,NBASIS,NE)
+    INTEGER, intent(in) :: NBASIS, NE
+    INTEGER :: i, j, a
+    REAL*8, dimension(NBASIS,NBASIS), intent(in) :: CMAT
+    REAL*8, dimension(NBASIS,NBASIS), intent(out) :: P
+    
+    P = 0.d0
+    DO i=1,NBASIS
+        DO j=1,NBASIS
+                DO a=1,NE
+                    P(i,j) = P(i,j) + 1.d0 * CMAT(i,a)*CMAT(j,a)  !! PAG. 139 EQ:3.145; SZABO (CONFERIR TRANSPOSTA)
+                END DO
+        END DO
+    END DO
+
+END SUBROUTINE newDensityOpen
 
 
 REAL*8 FUNCTION ENERGY(H,F,P,NB)
@@ -175,10 +191,9 @@ REAL*8 FUNCTION ENERGY(H,F,P,NB)
 
 END FUNCTION ENERGY
 
-
 ! SUBROTINA SCF!! -----------------------------------
 
-SUBROUTINE SCF(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT)
+SUBROUTINE SCFCLOSE(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT,TotEnergy)
     REAL*8, PARAMETER :: Tol = 1.0E-12
     INTEGER, intent(in) :: NBASIS, NE
     INTEGER :: i,j,k,l,loop, Nrot
@@ -187,7 +202,8 @@ SUBROUTINE SCF(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT)
     REAL*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT, CMAT
     REAL*8, dimension(NBASIS,NBASIS) :: XMAT, FMAT, GMAT, XFMAT, NewPMAT
     REAL*8, DIMENSION(NBASIS) :: EVALUES
-    REAL*8 :: a,b,c,d, TotEnergy, oldenergy
+    REAL*8 :: a,b,c,d, oldenergy
+    REAL*8, intent(out) :: TotEnergy
 
     TotEnergy = 0.d0
     NewPMAT = 0.d0
@@ -256,7 +272,7 @@ call dbgMatrix(CMAT,NBASIS,"XCOEFF MATRIX",13)
 
 call dbgMatrix(CMAT,NBASIS,"COEFF MATRIX",12)
 
-    call newDensity(CMAT,NewPMAT,NBASIS,NE)
+    call newDensityClose(CMAT,NewPMAT,NBASIS,NE)
 
 call dbgMatrix(NewPMAT,NBASIS,"NEW DENSITY MATRIX",18)
 
@@ -289,9 +305,118 @@ GOTO 200
 GOTO 200
 
 200 PRINT *, "FIM DO SCF"
-END SUBROUTINE SCF
+
+END SUBROUTINE SCFCLOSE
+
+SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT,Totenergy)
+    REAL*8, PARAMETER :: Tol = 1.0E-12
+    INTEGER, intent(in) :: NBASIS, NE
+    INTEGER :: i,j,k,l,loop, Nrot
+    REAL*8, dimension(NBASIS), intent(in) :: BASIS
+    REAL*8, dimension(NBASIS,NBASIS), intent(in) :: HCORE
+    REAL*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT, CMAT
+    REAL*8, dimension(NBASIS,NBASIS) :: XMAT, FMAT, GMAT, XFMAT, NewPMAT
+    REAL*8, DIMENSION(NBASIS) :: EVALUES
+    REAL*8 :: a,b,c,d, oldenergy
+    REAL*8, intent(out) :: TotEnergy
+
+    TotEnergy = 0.d0
+    NewPMAT = 0.d0
+    OldEnergy = 1000.00
+
+    DO loop=1,100
+    
+    PRINT *, "SCF Cycle ", loop
+
+    XFMAT   = 0.d0
+    GMAT    = 0.d0
+    FMAT    = 0.d0
+!    PMAT    = 1.0d0
+    DO i=1,NBASIS
+        a = BASIS(i)
+        DO j=1,NBASIS
+            b = BASIS(j)
+            DO k=1,NBASIS
+                c = BASIS(k)
+                DO l=1,NBASIS
+                    d = BASIS(l)
+                    GMAT(i,j) = GMAT(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d)  - 1.0d0*KIntegral(a,b,c,d))
+                END DO
+            END DO
+
+        END DO
+    END DO
+
+    call dbgMatrix(GMAT,NBASIS,"G MATRIX",8)
+    
+    DO i=1,NBASIS
+        DO j=1,NBASIS
+            FMAT(i,j) = HCORE(i,j) + GMAT(i,j)
+        END DO
+    END DO
+
+call dbgMatrix(FMAT,NBASIS,"F MATRIX",8)
+
+    XFMAT = FMAT
+    call TransfFMAT(XFMAT,XMAT,NBASIS)  ! XFMAT = XMAT' * FMAT * XMAT
+    
+call dbgMatrix(XFMAT,NBASIS,"XF MATRIX",9)
+
+    call FLUSH(99)
+    
+!    call JACOBI(XFMAT,CMAT,Tol,NBASIS) ! XFMAT -> ENERGY(A. VAL); CMAT -> XCOEFF(A. VEC)
+     call Jacobi(XFMAT,NBASIS,NBASIS,EVALUES,CMAT,Nrot) 
+    
+     write(99,*) "auto valores" 
+     write(99,*) (Evalues(i),i=1,NBASIS) 
+     XFMAT = 0.0
+     do i = 1, NBASIS
+        XFMAT(i,i) = EVALUES(i)
+     ENDDO
 
 
+!call dbgMatrix(XFMAT,NBASIS,"ENERGY MATRIX",13)
+call dbgMatrix(CMAT,NBASIS,"XCOEFF MATRIX",13)
+
+    CMAT = MATMUL(XMAT,CMAT)
+
+
+call dbgMatrix(CMAT,NBASIS,"COEFF MATRIX",12)
+
+    call newDensityOpen(CMAT,NewPMAT,NBASIS,NE)
+
+call dbgMatrix(NewPMAT,NBASIS,"NEW DENSITY MATRIX",18)
+
+    if (loop < 2) then
+      PMAT = NewPMAT
+    else
+      PMAT = 0.6*PMAT + 0.4*NEWPMAT
+    ENDIF
+
+
+    TotEnergy = ENERGY(HCORE,FMAT,PMAT,NBASIS)
+    WRITE(99,*) "Energia Total:", TotEnergy    
+
+    PRINT *, "--------------------------------"
+    PRINT *, "TOTAL ENERGY: ", TotEnergy
+    PRINT *, "--------------------------------"
+
+    IF(ABS(TotEnergy - OldEnergy).lt.10E-6) THEN
+        GOTO 160
+    END IF
+
+    OldEnergy = TotEnergy
+
+    END DO
+
+    PRINT *, "O CICLO SCF NÃO CONVERGIU"
+GOTO 210
+
+160 PRINT *, "O CICLO SCF CONVERGIU!"
+GOTO 210
+
+210 PRINT *, "FIM DO SCF"
+END SUBROUTINE SCFOPEN
 
 ! FUNÇÕES ---------------------------------------------
 

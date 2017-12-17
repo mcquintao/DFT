@@ -59,7 +59,7 @@ close(99)
 
 END SUBROUTINE closeFiles
 
-SUBROUTINE readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
+SUBROUTINE readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg,openShell)
 
 !   Subrotina para ler input
 !   Matheus Campos Quintão
@@ -72,20 +72,20 @@ SUBROUTINE readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
 
 !INPUT EXEMPLO (SEM EXCLAMAÇÃO!!):
 
-! 3 0 4        (ZATOM, CHARGE, NBASIS)
-! 10           (BASE 1)
-! 20           (BASE 2)
-! 30           (BASE 3)
-! 40           (BASE 4)
+! 3 0 4 .true./.false.   (ZATOM, CHARGE, NBASIS, SHELL)
+! 10                     (BASE 1)
+! 20                     (BASE 2)
+! 30                     (BASE 3)
+! 40                     (BASE 4)
 
     IMPLICIT NONE
-    logical, intent(out) :: dbg
+    logical, intent(out) :: dbg, openShell
     integer, intent(out) :: ZATOM, CHARGE, NBASIS
     integer :: i, j
     real*8, allocatable :: BASIS(:)
 
 ! ler a primeira linha do input
-    read(1,*) ZATOM, CHARGE, NBASIS
+    read(1,*) ZATOM, CHARGE, NBASIS, openShell
 
 ! Alocação dinâmica de memória para o vetor de bases
     ALLOCATE(BASIS(1:NBASIS))
@@ -105,18 +105,27 @@ SUBROUTINE readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
 
 END SUBROUTINE readInput
 
-SUBROUTINE dbgInput(ZATOM,CHARGE,NBASIS,BASIS)
+SUBROUTINE dbgInput(ZATOM,CHARGE,NBASIS,BASIS,openShell,NE,NALFA,NBETA)
 
     IMPLICIT NONE
-    integer, intent(in) :: ZATOM, CHARGE, NBASIS
+    integer, intent(in) :: ZATOM, CHARGE, NBASIS, NE, NALFA, NBETA
     integer :: i
     real*8, dimension(NBASIS) :: BASIS
+    logical, intent(in) :: openShell
 
     PRINT *, "DBG - dbgInput"    
     write(99,*) "------DADOS DO INPUT------"
     
     write(99,"(A18, I2)") "Número atômico: ", ZATOM
     write(99,*) "Carga: ", CHARGE
+    write(99,*) "Numero de Eletrons: ", NE
+    write(99,*) "Camada Aberta? ", openShell
+
+    IF(openShell) THEN
+        write(99,*) "Eletrons Alpha: ", NALFA
+        write(99,*) "Eletrons Beta: ", NBETA
+    END IF
+
     write(99,"(A18, I4)") "Número de bases: ", NBASIS
     write(99,*) "BASE: "
     

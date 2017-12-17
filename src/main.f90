@@ -4,22 +4,28 @@ PROGRAM main
     USE DftOperations
     IMPLICIT NONE
     
-    logical :: dbg
-    integer :: ZATOM, CHARGE, NBASIS, NE
+    logical :: dbg, openShell
+    integer :: ZATOM, CHARGE, NBASIS, NE, NALFA, NBETA
+    real*8 :: TOTENERGY, EALFA, EBETA
     real*8, allocatable :: BASIS(:)
     real*8, allocatable :: SMAT(:,:), XMAT(:,:), TMAT(:,:), UMAT(:,:)
-    real*8, allocatable :: HCORE(:,:), PMAT(:,:), CMAT(:,:)
+    real*8, allocatable :: HCORE(:,:), PMAT(:,:), CMAT(:,:), PALFA(:,:), PBETA(:,:)
 
 ! Inicializar variáveis
     ZATOM = 0
     NE = 0
+    NALFA = 0
+    NBETA = 0
     CHARGE = 0
     NBASIS = 0
     dbg = .false.
-
+    openShell = .false.
+    TOTENERGY = 0.d0
+    EALFA = 0.d0
+    EBETA = 0.d0
 ! Carregar input
 call openFiles()
-call readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg)
+call readInput(ZATOM,CHARGE,NBASIS,BASIS,dbg,openShell)
 
 NE = ZATOM - CHARGE
 ALLOCATE(SMAT(1:NBASIS,1:NBASIS))
@@ -30,11 +36,21 @@ ALLOCATE(HCORE(1:NBASIS,1:NBASIS))
 ALLOCATE(PMAT(1:NBASIS,1:NBASIS))
 ALLOCATE(CMAT(1:NBASIS,1:NBASIS))
 
+IF(openShell) THEN
+    PRINT *, "** SCF - CAMADA ABERTA **"
+    NALFA = NE/2
+    NBETA = NALFA + MOD(NE,2)
+    PRINT *, NALFA, NBETA
 
+    ALLOCATE(PALFA(1:NBASIS,1:NBASIS))
+    ALLOCATE(PBETA(1:NBASIS,1:NBASIS))
 
+ELSE
+    PRINT *, "** SCF - CAMADA FECHADA **"
+END IF
 if(dbg) then
     PRINT *, "DEBUG ON!"
-    call dbgInput(ZATOM,CHARGE,NBASIS,BASIS)
+    call dbgInput(ZATOM,CHARGE,NBASIS,BASIS,openShell,NE,NALFA,NBETA)
 end if
 
 ! --- PROGRAMA PRINCIPAL --- !
@@ -86,9 +102,25 @@ if(dbg) then
     call dbgMatrix(PMAT,NBASIS,"DENSITY MATRIX",14)
 end if
 
-call scf(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT)
+IF(openShell) THEN
+    PALFA = PMAT
+    call scfOpen(XMAT,HCORE,BASIS,NBASIS,NALFA,PALFA,CMAT,EALFA)
+    PBETA = PALFA
+    call scfOpen(XMAT,HCORE,BASIS,NBASIS,NBETA,PBETA,CMAT,EBETA)
+    PRINT *, "----------------------------------------------------"
+    PRINT *, "OPEN SHELL TOTAL ENERGY (HARTREE): ", EALFA + EBETA
+    PRINT *, "OPEN SHELL TOTAL ENERGY (KJ/MOL): ", (EALFA + EBETA)*2625.5
+    PRINT *, "----------------------------------------------------"
+ELSE
+    call scfClose(XMAT,HCORE,BASIS,NBASIS,NE,PMAT,CMAT,TOTENERGY)
+    PRINT *, "----------------------------------------------------"
+    PRINT *, "CLOSE SHELL TOTAL ENERGY: ", TOTENERGY
+    PRINT *, "CLOSE SHELL TOTAL ENERGY (KJ/MOL): ", TOTENERGY*2625.5
+    PRINT *, "----------------------------------------------------"
+END IF
 
 ! Fechar arquivos
 call closeFiles()
 
 END PROGRAM main
+
