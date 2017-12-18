@@ -100,12 +100,20 @@ end if
 IF(openShell) THEN
     call scfOpen(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,TOTENERGY)
     PRINT *, "----------------------------------------------------"
+    PRINT *, "Traço PS: ", checkDensity(PMAT,SMAT,NBASIS)
+    PRINT *, "CSC' (ALFA): ", checkOrto(CMAT_ALFA,SMAT,NBASIS)
+    PRINT *, "CSC' (BETA): ", checkOrto(CMAT_BETA,SMAT,NBASIS)
+    PRINT *, "Mulliken ", mulliken(PMAT,SMAT,ZATOM,NBASIS)
     PRINT *, "OPEN SHELL TOTAL ENERGY (HARTREE): ", TOTENERGY
     PRINT *, "OPEN SHELL TOTAL ENERGY (KJ/MOL): ", TOTENERGY*2625.5
     PRINT *, "----------------------------------------------------"
 ELSE
     call scfClose(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT,TOTENERGY)
     PRINT *, "----------------------------------------------------"
+    PRINT *, "Traço PS: ", checkDensity(PMAT,SMAT,NBASIS)
+    PRINT *, "CSC': ", checkOrto(CMAT,SMAT,NBASIS)
+    PRINT *, "Mulliken ", mulliken(PMAT,SMAT,ZATOM,NBASIS)
+    PRINT *, "ONE-ELECTRON ENERGY: ", HCORENERGY(HCORE,NE,NBASIS)
     PRINT *, "CLOSE SHELL TOTAL ENERGY: ", TOTENERGY
     PRINT *, "CLOSE SHELL TOTAL ENERGY (KJ/MOL): ", TOTENERGY*2625.5
     PRINT *, "----------------------------------------------------"

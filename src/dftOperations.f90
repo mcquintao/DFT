@@ -142,7 +142,7 @@ SUBROUTINE newDensityClose(CMAT,P,NBASIS,NE)
     INTEGER :: i, j, a
     REAL*8, dimension(NBASIS,NBASIS), intent(in) :: CMAT
     REAL*8, dimension(NBASIS,NBASIS), intent(out) :: P
-    
+
     P = 0.d0
     DO i=1,NBASIS
         DO j=1,NBASIS
@@ -259,11 +259,9 @@ SUBROUTINE SCFCLOSE(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT,TotEnergy)
 
     call dbgMatrix(GMAT,NBASIS,"G MATRIX",8)
     
-    DO i=1,NBASIS
-        DO j=1,NBASIS
-            FMAT(i,j) = HCORE(i,j) + GMAT(i,j)
-        END DO
-    END DO
+    FMAT = HCORE + GMAT
+
+    TotEnergy = ENERGY(HCORE,FMAT,PMAT,NBASIS)
 
 call dbgMatrix(FMAT,NBASIS,"F MATRIX",8)
 
@@ -302,9 +300,8 @@ call dbgMatrix(NewPMAT,NBASIS,"NEW DENSITY MATRIX",18)
     else
       PMAT = mix*PMAT + (1 - mix)*NEWPMAT
     ENDIF
+    
 
-
-    TotEnergy = ENERGY(HCORE,FMAT,PMAT,NBASIS)
     WRITE(99,*) "Energia Total:", TotEnergy    
 
     PRINT *, "--------------------------------"
@@ -472,12 +469,60 @@ REAL*8 FUNCTION KIntegral(a,b,c,d)
     KIntegral = JKIntegrals(a,d,c,b)
 END FUNCTION KIntegral
 
-REAL*8 FUNCTION G(a,b,P,NB)
+REAL*8 FUNCTION checkDensity(PMAT,SMAT,NB)
+    INTEGER, INTENT(in) :: NB
+    INTEGER :: i
+    REAL*8, DIMENSION(NB,NB) :: PS
+    REAL*8, DIMENSION(NB,NB), intent(in) :: PMAT,SMAT
 
-    INTEGER :: a, b, NB, i, j
-    REAL*8, dimension(NB,NB) :: P
+    checkDensity = 0.d0
+    PS = MATMUL(PMAT,SMAT)
+    DO i=1,NB
+        checkDensity = checkDensity + PS(i,i)
+    END DO
+END FUNCTION
 
-END FUNCTION G
+REAL*8 FUNCTION mulliken(PMAT,SMAT,ZATOM,NB)
+    INTEGER, INTENT(in) :: NB, ZATOM
+    INTEGER :: i
+    REAL*8, DIMENSION(NB,NB) :: PS
+    REAL*8, DIMENSION(NB,NB), intent(in) :: PMAT,SMAT
+
+    mulliken = 0.d0
+    PS = MATMUL(PMAT,SMAT)
+    DO i=1,NB
+        mulliken = mulliken + PS(i,i)
+    END DO
+    mulliken = ZATOM - mulliken
+
+END FUNCTION
+
+
+REAL*8 FUNCTION checkOrto(CMAT,SMAT,NB)
+    INTEGER, INTENT(in) :: NB
+    INTEGER :: i
+    REAL*8, DIMENSION(NB,NB) :: CSC
+    REAL*8, DIMENSION(NB,NB), intent(in) :: CMAT,SMAT
+
+    checkOrto = 0.d0
+    CSC = MATMUL(TRANSPOSE(CMAT),SMAT)
+    CSC = MATMUL(CSC,CMAT)
+    DO i=1,NB
+        checkOrto = checkOrto + CSC(i,i)
+    END DO
+    checkOrto = checkOrto / NB
+END FUNCTION
+
+REAL*8 FUNCTION HCORENERGY(HCOR,NE,NB)
+    INTEGER, INTENT(in) :: NB, NE
+    INTEGER :: i
+    REAL*8, DIMENSION(NB,NB), intent(in) :: HCOR
+    HCORENERGY = 0.d0
+    DO i=1,NE
+        HCORENERGY = HCORENERGY +  2.d0 * HCOR(i,i)
+    END DO
+
+END FUNCTION
 
 END MODULE DftOperations
 
