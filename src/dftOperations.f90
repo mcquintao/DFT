@@ -222,8 +222,20 @@ REAL*8 FUNCTION ENERGYOPEN(H,FA,FB,PA,PB,NB)
 
 END FUNCTION ENERGYOPEN
 
+REAL*8 FUNCTION densityConv(PN,PO,NB)
+INTEGER, intent(in) :: NB
+INTEGER :: i, j
+REAL*8, dimension(NB,NB), intent(in) :: PN, PO
+densityConv = 0.d0
 
+DO i=1,NB
+DO j=1,NB
+densityConv = densityConv + (PN(i,j) - PO(i,j))**2
+END DO
+END DO
 
+densityConv = SQRT(densityConv)/NB
+END FUNCTION
 
 ! SUBROTINA SCF!! -----------------------------------
 
@@ -241,7 +253,7 @@ SUBROUTINE SCFCLOSE(XMAT,HCORE,SMAT,BASIS,NBASIS,NE,mix,PMAT,CMAT,GMAT,TotEnergy
     REAL*8, intent(out) :: TotEnergy
 
     TotEnergy = 0.d0
-    NewPMAT = 0.d0
+    NewPMAT = 1.d0
     OldEnergy = 1000.00
     trPG = 0.d0
 
@@ -278,8 +290,23 @@ SUBROUTINE SCFCLOSE(XMAT,HCORE,SMAT,BASIS,NBASIS,NE,mix,PMAT,CMAT,GMAT,TotEnergy
 
     TotEnergy = ENERGY(HCORE,FMAT,PMAT,NBASIS)
 
-
     PRINT*, "##", loop, TotEnergy, expectValue(PMAT,FMAT,NBASIS)
+    WRITE(99,*) "Energia Total:", TotEnergy    
+    PRINT *, "--------------------------------"
+    PRINT *, "TOTAL ENERGY: ", TotEnergy
+    PRINT *, "--------------------------------"
+
+    IF(ABS(densityConv(PMAT,newPMAT,NBASIS)).lt.10E-12) THEN
+        GOTO 150
+    END IF
+
+!    IF(ABS(TotEnergy - OldEnergy).lt.10E-6) THEN
+!        GOTO 150
+!    END IF
+
+    OldEnergy = TotEnergy
+
+
 
 call dbgMatrix(FMAT,NBASIS,"F MATRIX",8)
 
@@ -321,18 +348,6 @@ call dbgMatrix(NewPMAT,NBASIS,"NEW DENSITY MATRIX",18)
     ENDIF
     
 
-    WRITE(99,*) "Energia Total:", TotEnergy    
-
-    PRINT *, "--------------------------------"
-    PRINT *, "TOTAL ENERGY: ", TotEnergy
-    PRINT *, "--------------------------------"
-
-    IF(ABS(TotEnergy - OldEnergy).lt.10E-6) THEN
-        GOTO 150
-    END IF
-
-    OldEnergy = TotEnergy
-
     END DO
 
 100 PRINT *, "O CICLO SCF NÃO CONVERGIU"
@@ -353,7 +368,7 @@ SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,GMAT,
     REAL*8, dimension(NBASIS,NBASIS), intent(in) :: HCORE
     REAL*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT, CMAT_ALFA, CMAT_BETA, GMAT
     REAL*8, dimension(NBASIS,NBASIS) :: XMAT, FMAT_ALFA, FMAT_BETA, GALFA, GBETA, XFMAT_ALFA, XFMAT_BETA, PALFA, PBETA
-    REAL*8, dimension(NBASIS,NBASIS) :: NewPMAT_ALFA, NewPMAT_BETA
+    REAL*8, dimension(NBASIS,NBASIS) :: NewPMAT_ALFA, NewPMAT_BETA, FMAT
     REAL*8, DIMENSION(NBASIS) :: EVALUES_ALFA, EVALUES_BETA
     REAL*8 :: a,b,c,d, oldenergy
     REAL*8, intent(in) :: mix
@@ -397,6 +412,23 @@ SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,GMAT,
     END DO
 
     GMAT = 0.5D0*(GALFA + GBETA)
+    FMAT = HCORE + GMAT
+    !TotEnergy = expectValue(PMAT,FMAT,NBASIS)
+    TotEnergy = ENERGYOPEN(HCORE,FMAT_ALFA,FMAT_BETA,NewPMAT_ALFA,NewPMAT_BETA,NBASIS)
+
+    PRINT*, "##", loop, TotEnergy, expectValue(PMAT,FMAT,NBASIS)
+    WRITE(99,*) "Energia Total:", TotEnergy    
+
+    PRINT *, "--------------------------------"
+    PRINT *, "TOTAL ENERGY: ", TotEnergy
+    PRINT *, "--------------------------------"
+
+    IF(ABS(TotEnergy - OldEnergy).lt.10E-6) THEN
+        GOTO 160
+    END IF
+
+    OldEnergy = TotEnergy
+
 !call dbgMatrix(GMAT,NBASIS,"G MATRIX",8)
     
     FMAT_ALFA = HCORE + GALFA
@@ -451,20 +483,6 @@ SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,GMAT,
       PBETA = mix*PBETA + (1 - mix)*NewPMAT_BETA
       PMAT = PALFA + PBETA
     ENDIF
-
-    TotEnergy = ENERGYOPEN(HCORE,FMAT_ALFA,FMAT_BETA,NewPMAT_ALFA,NewPMAT_BETA,NBASIS)
-
-    WRITE(99,*) "Energia Total:", TotEnergy    
-
-    PRINT *, "--------------------------------"
-    PRINT *, "TOTAL ENERGY: ", TotEnergy
-    PRINT *, "--------------------------------"
-
-    IF(ABS(TotEnergy - OldEnergy).lt.10E-6) THEN
-        GOTO 160
-    END IF
-
-    OldEnergy = TotEnergy
 
     END DO
 

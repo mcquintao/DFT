@@ -105,11 +105,16 @@ IF(openShell) THEN
     PRINT *, "CSC' (ALFA): ", checkOrto(CMAT_ALFA,SMAT,NBASIS)
     PRINT *, "CSC' (BETA): ", checkOrto(CMAT_BETA,SMAT,NBASIS)
     PRINT *, "Mulliken ", mulliken(PMAT,SMAT,ZATOM,NBASIS)
-    PRINT *, "KINETIC ENERGY: ", expectValue(PMAT,TMAT,NBASIS)
-    PRINT *, "POTENTIAL ENERGY: ", expectValue(PMAT,UMAT,NBASIS)
-    PRINT *, "ONE-ELECTRON ENERGY: ", expectValue(PMAT,HCORE,NBASIS)
-    PRINT *, "TWO-ELECTRON ENERGY: ", expectValue(PMAT,GMAT,NBASIS)
-    PRINT *, "OPEN SHELL TOTAL ENERGY (HARTREE): ", TOTENERGY
+    PRINT *, "KINETIC ENERGY: ", expectValue(PMAT,TMAT,NBASIS)*27.2114
+    PRINT *, "POTENTIAL ENERGY: ", expectValue(PMAT,UMAT,NBASIS)*27.2114
+    PRINT *, "ONE-ELECTRON ENERGY: ", expectValue(PMAT,HCORE,NBASIS)*27.2114
+    PRINT *, "TWO-ELECTRON ENERGY: ", expectValue(PMAT,GMAT,NBASIS)*27.2114
+    PRINT *, ""
+    PRINT *, "OPEN SHELL TOTAL tr(PH) + tr(PG) (CAUTION! Maybe it is wrong! ): ", &
+    &(expectValue(PMAT,HCORE,NBASIS) + expectValue(PMAT,GMAT,NBASIS))*27.2114
+    PRINT *, "----------------------------------------------------"
+    PRINT *, "----------------------------------------------------"
+    PRINT *, "OPEN SHELL TOTAL ENERGY (CAUTION! Maybe it is wrong! ): ", TOTENERGY*27.2114
     PRINT *, "OPEN SHELL TOTAL ENERGY (KJ/MOL): ", TOTENERGY*2625.5
     PRINT *, "----------------------------------------------------"
 ELSE
@@ -118,11 +123,16 @@ ELSE
     PRINT *, "Traço PS: ", expectValue(PMAT,SMAT,NBASIS)
     PRINT *, "CSC': ", checkOrto(CMAT,SMAT,NBASIS)
     PRINT *, "Mulliken ", mulliken(PMAT,SMAT,ZATOM,NBASIS)
-    PRINT *, "KINETIC ENERGY: ", expectValue(PMAT,TMAT,NBASIS)
-    PRINT *, "POTENTIAL ENERGY: ", expectValue(PMAT,UMAT,NBASIS)
-    PRINT *, "ONE-ELECTRON ENERGY: ", expectValue(PMAT,HCORE,NBASIS)
-    PRINT *, "TWO-ELECTRON ENERGY: ", expectValue(PMAT,GMAT,NBASIS)
-    PRINT *, "CLOSE SHELL TOTAL ENERGY: ", TOTENERGY
+    PRINT *, "KINETIC ENERGY: ", expectValue(PMAT,TMAT,NBASIS)*27.2114
+    PRINT *, "POTENTIAL ENERGY: ", expectValue(PMAT,UMAT,NBASIS)*27.2114
+    PRINT *, "ONE-ELECTRON ENERGY: ", expectValue(PMAT,HCORE,NBASIS)*27.2114
+    PRINT *, "TWO-ELECTRON ENERGY: ", expectValue(PMAT,GMAT,NBASIS)*27.2114
+    PRINT *, ""
+    PRINT *, "CLOSE SHELL TOTAL tr(PH) + tr(PG) (CAUTION! Maybe it is wrong! ): ", &
+    &(expectValue(PMAT,HCORE,NBASIS) + expectValue(PMAT,GMAT,NBASIS))*27.2114
+    PRINT *, "----------------------------------------------------"
+    PRINT *, "----------------------------------------------------"
+    PRINT *, "CLOSE SHELL TOTAL ENERGY (CAUTION! Maybe it is wrong! ): ", TOTENERGY*27.2114
     PRINT *, "CLOSE SHELL TOTAL ENERGY (KJ/MOL): ", TOTENERGY*2625.5
     PRINT *, "----------------------------------------------------"
 END IF
