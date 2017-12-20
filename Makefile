@@ -1,6 +1,6 @@
 # COMPILE='ifort -O2 -r8 -check all'
 
-COMPILE=gfortran -O2
+COMPILE=gfortran -O2 -fcheck=all
 
 dft.x: obj/main.o obj/diskOperations.o obj/dftOperations.o obj/mathLib.o
 	${COMPILE}   obj/main.o obj/diskOperations.o obj/dftOperations.o obj/mathLib.o -o dft.x

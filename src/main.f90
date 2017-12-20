@@ -8,7 +8,7 @@ PROGRAM main
     integer :: ZATOM, CHARGE, NBASIS, NE, NALFA, NBETA
     real*8 :: TOTENERGY, mix
     real*8, allocatable :: BASIS(:)
-    real*8, allocatable :: SMAT(:,:), XMAT(:,:), TMAT(:,:), UMAT(:,:)
+    real*8, allocatable :: SMAT(:,:), XMAT(:,:), TMAT(:,:), UMAT(:,:), GMAT(:,:)
     real*8, allocatable :: HCORE(:,:), PMAT(:,:), CMAT(:,:), CMAT_ALFA(:,:), CMAT_BETA(:,:)
 
 ! Inicializar variáveis
@@ -32,6 +32,7 @@ ALLOCATE(UMAT(1:NBASIS,1:NBASIS))
 ALLOCATE(HCORE(1:NBASIS,1:NBASIS))
 ALLOCATE(PMAT(1:NBASIS,1:NBASIS))
 ALLOCATE(CMAT(1:NBASIS,1:NBASIS))
+ALLOCATE(GMAT(1:NBASIS,1:NBASIS))
 
 IF(openShell) THEN
     PRINT *, "** SCF - CAMADA ABERTA **"
@@ -98,22 +99,29 @@ if(dbg) then
 end if
 
 IF(openShell) THEN
-    call scfOpen(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,TOTENERGY)
+    call scfOpen(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,GMAT,TOTENERGY)
     PRINT *, "----------------------------------------------------"
-    PRINT *, "Traço PS: ", checkDensity(PMAT,SMAT,NBASIS)
+    PRINT *, "Traço PS: ", expectValue(PMAT,SMAT,NBASIS)
     PRINT *, "CSC' (ALFA): ", checkOrto(CMAT_ALFA,SMAT,NBASIS)
     PRINT *, "CSC' (BETA): ", checkOrto(CMAT_BETA,SMAT,NBASIS)
     PRINT *, "Mulliken ", mulliken(PMAT,SMAT,ZATOM,NBASIS)
+    PRINT *, "KINETIC ENERGY: ", expectValue(PMAT,TMAT,NBASIS)
+    PRINT *, "POTENTIAL ENERGY: ", expectValue(PMAT,UMAT,NBASIS)
+    PRINT *, "ONE-ELECTRON ENERGY: ", expectValue(PMAT,HCORE,NBASIS)
+    PRINT *, "TWO-ELECTRON ENERGY: ", expectValue(PMAT,GMAT,NBASIS)
     PRINT *, "OPEN SHELL TOTAL ENERGY (HARTREE): ", TOTENERGY
     PRINT *, "OPEN SHELL TOTAL ENERGY (KJ/MOL): ", TOTENERGY*2625.5
     PRINT *, "----------------------------------------------------"
 ELSE
-    call scfClose(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT,TOTENERGY)
+    call scfClose(XMAT,HCORE,SMAT,BASIS,NBASIS,NE,mix,PMAT,CMAT,GMAT,TOTENERGY)
     PRINT *, "----------------------------------------------------"
-    PRINT *, "Traço PS: ", checkDensity(PMAT,SMAT,NBASIS)
+    PRINT *, "Traço PS: ", expectValue(PMAT,SMAT,NBASIS)
     PRINT *, "CSC': ", checkOrto(CMAT,SMAT,NBASIS)
     PRINT *, "Mulliken ", mulliken(PMAT,SMAT,ZATOM,NBASIS)
-    PRINT *, "ONE-ELECTRON ENERGY: ", HCORENERGY(HCORE,NE,NBASIS)
+    PRINT *, "KINETIC ENERGY: ", expectValue(PMAT,TMAT,NBASIS)
+    PRINT *, "POTENTIAL ENERGY: ", expectValue(PMAT,UMAT,NBASIS)
+    PRINT *, "ONE-ELECTRON ENERGY: ", expectValue(PMAT,HCORE,NBASIS)
+    PRINT *, "TWO-ELECTRON ENERGY: ", expectValue(PMAT,GMAT,NBASIS)
     PRINT *, "CLOSE SHELL TOTAL ENERGY: ", TOTENERGY
     PRINT *, "CLOSE SHELL TOTAL ENERGY (KJ/MOL): ", TOTENERGY*2625.5
     PRINT *, "----------------------------------------------------"

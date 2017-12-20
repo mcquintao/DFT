@@ -108,11 +108,7 @@ SUBROUTINE HCor(T,U,H,NBASIS)
     real*8, dimension(NBASIS,NBASIS), intent(out) :: H
     
     H = 0.d0
-    DO i=1,NBASIS
-        DO j=1,NBASIS
-            H(i,j) = T(i,j) + U(i,j)
-        END DO
-    END DO
+    H = T + U
 
 END SUBROUTINE HCor
 
@@ -144,6 +140,23 @@ SUBROUTINE newDensityClose(CMAT,P,NBASIS,NE)
     REAL*8, dimension(NBASIS,NBASIS), intent(out) :: P
 
     P = 0.d0
+
+!    IF(NE.eq.1) THEN
+!        DO i=1,NBASIS
+!            DO j=1,NBASIS
+!                P(i,j) = P(i,j) + 1.d0 * CMAT(i,1)*CMAT(j,1)  !! PAG. 139 EQ:3.145; SZABO (CONFERIR TRANSPOSTA)
+!            END DO
+!        END DO
+!    ELSE
+!        DO a=1,NE/2
+!            DO i=1,NBASIS
+!                DO j=1,NBASIS
+!                    P(i,j) = P(i,j) + 2.d0 * CMAT(i,a)*CMAT(j,a)  !! PAG. 139 EQ:3.145; SZABO (CONFERIR TRANSPOSTA)
+!                END DO
+!            END DO
+!        END DO
+!    END IF
+
     DO i=1,NBASIS
         DO j=1,NBASIS
             IF(NE.eq.1) THEN
@@ -198,6 +211,7 @@ REAL*8 FUNCTION ENERGYOPEN(H,FA,FB,PA,PB,NB)
     REAL*8, dimension(NB,NB), intent(in) :: H, FA, FB, PA, PB
     REAL*8, dimension(NB,NB) :: P
     
+    P = 0.d0    
     P = PA + PB
     ENERGYOPEN = 0.d0
     DO i = 1, NB
@@ -213,14 +227,14 @@ END FUNCTION ENERGYOPEN
 
 ! SUBROTINA SCF!! -----------------------------------
 
-SUBROUTINE SCFCLOSE(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT,TotEnergy)
+SUBROUTINE SCFCLOSE(XMAT,HCORE,SMAT,BASIS,NBASIS,NE,mix,PMAT,CMAT,GMAT,TotEnergy)
     REAL*8, PARAMETER :: Tol = 1.0E-12
     INTEGER, intent(in) :: NBASIS, NE
     INTEGER :: i,j,k,l,loop, Nrot
     REAL*8, dimension(NBASIS), intent(in) :: BASIS
-    REAL*8, dimension(NBASIS,NBASIS), intent(in) :: HCORE
-    REAL*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT, CMAT
-    REAL*8, dimension(NBASIS,NBASIS) :: XMAT, FMAT, GMAT, XFMAT, NewPMAT
+    REAL*8, dimension(NBASIS,NBASIS), intent(in) :: HCORE, SMAT
+    REAL*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT, CMAT, GMAT
+    REAL*8, dimension(NBASIS,NBASIS) :: XMAT, FMAT, XFMAT, NewPMAT
     REAL*8, DIMENSION(NBASIS) :: EVALUES
     REAL*8 :: a,b,c,d, oldenergy
     REAL*8, intent(in) :: mix
@@ -229,6 +243,7 @@ SUBROUTINE SCFCLOSE(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT,TotEnergy)
     TotEnergy = 0.d0
     NewPMAT = 0.d0
     OldEnergy = 1000.00
+    trPG = 0.d0
 
     DO loop=1,100
     
@@ -237,7 +252,8 @@ SUBROUTINE SCFCLOSE(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT,TotEnergy)
     XFMAT   = 0.d0
     GMAT    = 0.d0
     FMAT    = 0.d0
-!    PMAT    = 1.0d0
+    CMAT    = 0.d0
+
     DO i=1,NBASIS
         a = BASIS(i)
         DO j=1,NBASIS
@@ -249,7 +265,7 @@ SUBROUTINE SCFCLOSE(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT,TotEnergy)
                     IF(NE.eq.1) THEN
                         GMAT(i,j) = GMAT(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d)  - 1.0d0*KIntegral(a,b,c,d))
                     ELSE
-                        GMAT(i,j) = GMAT(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d)  - 0.5d0*KIntegral(a,b,c,d))
+                        GMAT(i,j) = GMAT(i,j) + PMAT(k,l)*(JIntegral(a,b,c,d)  - 0.5D0*KIntegral(a,b,c,d))
                     END IF
                 END DO
             END DO
@@ -258,10 +274,12 @@ SUBROUTINE SCFCLOSE(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT,TotEnergy)
     END DO
 
     call dbgMatrix(GMAT,NBASIS,"G MATRIX",8)
-    
     FMAT = HCORE + GMAT
 
     TotEnergy = ENERGY(HCORE,FMAT,PMAT,NBASIS)
+
+
+    PRINT*, "##", loop, TotEnergy, expectValue(PMAT,FMAT,NBASIS)
 
 call dbgMatrix(FMAT,NBASIS,"F MATRIX",8)
 
@@ -278,9 +296,10 @@ call dbgMatrix(XFMAT,NBASIS,"XF MATRIX",9)
      write(99,*) "auto valores" 
      write(99,*) (Evalues(i),i=1,NBASIS) 
      XFMAT = 0.0
-     do i = 1, NBASIS
+     DO i = 1, NBASIS
         XFMAT(i,i) = EVALUES(i)
      ENDDO
+
 
 
 !call dbgMatrix(XFMAT,NBASIS,"ENERGY MATRIX",13)
@@ -326,13 +345,13 @@ GOTO 200
 
 END SUBROUTINE SCFCLOSE
 
-SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,Totenergy)
+SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,GMAT,Totenergy)
     REAL*8, PARAMETER :: Tol = 1.0E-12
     INTEGER, intent(in) :: NBASIS 
     INTEGER :: i,j,k,l,loop, Nrot, NALFA, NBETA
     REAL*8, dimension(NBASIS), intent(in) :: BASIS
     REAL*8, dimension(NBASIS,NBASIS), intent(in) :: HCORE
-    REAL*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT, CMAT_ALFA, CMAT_BETA
+    REAL*8, dimension(NBASIS,NBASIS), intent(out) :: PMAT, CMAT_ALFA, CMAT_BETA, GMAT
     REAL*8, dimension(NBASIS,NBASIS) :: XMAT, FMAT_ALFA, FMAT_BETA, GALFA, GBETA, XFMAT_ALFA, XFMAT_BETA, PALFA, PBETA
     REAL*8, dimension(NBASIS,NBASIS) :: NewPMAT_ALFA, NewPMAT_BETA
     REAL*8, DIMENSION(NBASIS) :: EVALUES_ALFA, EVALUES_BETA
@@ -344,11 +363,12 @@ SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,Toten
     NewPMAT_ALFA = 0.d0
     NewPMAT_BETA = 0.d0
     OldEnergy = 1000.00
+    GMAT = 0.d0
 
     NALFA = NE/2
     NBETA = NALFA + MOD(NE,2)
-    PALFA = 0.d0
-    PBETA = 0.d0
+    PALFA = PMAT
+    PBETA = PMAT
 
     DO loop=1,100
     
@@ -360,7 +380,6 @@ SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,Toten
     GBETA        = 0.d0
     FMAT_ALFA    = 0.d0
     FMAT_BETA    = 0.d0
-!    PMAT    = 1.0d0
     DO i=1,NBASIS
         a = BASIS(i)
         DO j=1,NBASIS
@@ -377,6 +396,7 @@ SUBROUTINE SCFOPEN(XMAT,HCORE,BASIS,NBASIS,NE,mix,PMAT,CMAT_ALFA,CMAT_BETA,Toten
         END DO
     END DO
 
+    GMAT = 0.5D0*(GALFA + GBETA)
 !call dbgMatrix(GMAT,NBASIS,"G MATRIX",8)
     
     FMAT_ALFA = HCORE + GALFA
@@ -469,16 +489,16 @@ REAL*8 FUNCTION KIntegral(a,b,c,d)
     KIntegral = JKIntegrals(a,d,c,b)
 END FUNCTION KIntegral
 
-REAL*8 FUNCTION checkDensity(PMAT,SMAT,NB)
+REAL*8 FUNCTION expectValue(PMAT,MAT,NB)
     INTEGER, INTENT(in) :: NB
     INTEGER :: i
-    REAL*8, DIMENSION(NB,NB) :: PS
-    REAL*8, DIMENSION(NB,NB), intent(in) :: PMAT,SMAT
+    REAL*8, DIMENSION(NB,NB) :: PM
+    REAL*8, DIMENSION(NB,NB), intent(in) :: PMAT,MAT
 
-    checkDensity = 0.d0
-    PS = MATMUL(PMAT,SMAT)
+    expectValue = 0.d0
+    PM = MATMUL(PMAT,MAT)
     DO i=1,NB
-        checkDensity = checkDensity + PS(i,i)
+        expectValue = expectValue + PM(i,i)
     END DO
 END FUNCTION
 
@@ -498,15 +518,15 @@ REAL*8 FUNCTION mulliken(PMAT,SMAT,ZATOM,NB)
 END FUNCTION
 
 
-REAL*8 FUNCTION checkOrto(CMAT,SMAT,NB)
+REAL*8 FUNCTION checkOrto(MAT,SMAT,NB)
     INTEGER, INTENT(in) :: NB
     INTEGER :: i
     REAL*8, DIMENSION(NB,NB) :: CSC
-    REAL*8, DIMENSION(NB,NB), intent(in) :: CMAT,SMAT
+    REAL*8, DIMENSION(NB,NB), intent(in) :: MAT,SMAT
 
     checkOrto = 0.d0
-    CSC = MATMUL(TRANSPOSE(CMAT),SMAT)
-    CSC = MATMUL(CSC,CMAT)
+    CSC = MATMUL(TRANSPOSE(MAT),SMAT)
+    CSC = MATMUL(CSC,MAT)
     DO i=1,NB
         checkOrto = checkOrto + CSC(i,i)
     END DO

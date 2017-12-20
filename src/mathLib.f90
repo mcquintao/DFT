@@ -340,6 +340,7 @@ real*8 function JKIntegrals(a,b,c,d)
 
     JKIntegrals = 16.d0/SQRT(PI)
     JKIntegrals = JKIntegrals*(a*b*c*d)**(3.d0/4.d0)
+!   JKIntegrals = JKIntegrals/SQRT((a + c)*(b + d)*(a+b+c+d))
     JKIntegrals = JKIntegrals/((a + c)*(b + d)*SQRT(a+b+c+d))
 
 end function JKIntegrals
