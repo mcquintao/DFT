@@ -6,12 +6,13 @@ PROGRAM main
     
     logical :: dbg, openShell
     integer :: ZATOM, CHARGE, NBASIS, NE, NALFA, NBETA
-    real*8 :: TOTENERGY, mix
+    real*8 :: TOTENERGY, mix, ec
     real*8, allocatable :: BASIS(:)
     real*8, allocatable :: SMAT(:,:), XMAT(:,:), TMAT(:,:), UMAT(:,:), GMAT(:,:)
     real*8, allocatable :: HCORE(:,:), PMAT(:,:), CMAT(:,:), CMAT_ALFA(:,:), CMAT_BETA(:,:)
 
 ! Inicializar variáveis
+    ec = 1.0d0 ! 2625.5 = KJ/mol, 27.2114 = eV
     ZATOM = 0
     NE = 0
     CHARGE = 0
@@ -105,17 +106,16 @@ IF(openShell) THEN
     PRINT *, "CSC' (ALFA): ", checkOrto(CMAT_ALFA,SMAT,NBASIS)
     PRINT *, "CSC' (BETA): ", checkOrto(CMAT_BETA,SMAT,NBASIS)
     PRINT *, "Mulliken ", mulliken(PMAT,SMAT,ZATOM,NBASIS)
-    PRINT *, "KINETIC ENERGY: ", expectValue(PMAT,TMAT,NBASIS)*27.2114
-    PRINT *, "POTENTIAL ENERGY: ", expectValue(PMAT,UMAT,NBASIS)*27.2114
-    PRINT *, "ONE-ELECTRON ENERGY: ", expectValue(PMAT,HCORE,NBASIS)*27.2114
-    PRINT *, "TWO-ELECTRON ENERGY: ", expectValue(PMAT,GMAT,NBASIS)*27.2114
+    PRINT *, "KINETIC ENERGY: ", expectValue(PMAT,TMAT,NBASIS)*ec
+    PRINT *, "POTENTIAL ENERGY: ", expectValue(PMAT,UMAT,NBASIS)*ec
+    PRINT *, "ONE-ELECTRON ENERGY: ", expectValue(PMAT,HCORE,NBASIS)*ec
+    PRINT *, "TWO-ELECTRON ENERGY: ", expectValue(PMAT,GMAT,NBASIS)*ec
     PRINT *, ""
     PRINT *, "OPEN SHELL TOTAL tr(PH) + tr(PG) (CAUTION! Maybe it is wrong! ): ", &
-    &(expectValue(PMAT,HCORE,NBASIS) + expectValue(PMAT,GMAT,NBASIS))*27.2114
+    &(expectValue(PMAT,HCORE,NBASIS) + expectValue(PMAT,GMAT,NBASIS))*ec
     PRINT *, "----------------------------------------------------"
     PRINT *, "----------------------------------------------------"
-    PRINT *, "OPEN SHELL TOTAL ENERGY (CAUTION! Maybe it is wrong! ): ", TOTENERGY*27.2114
-    PRINT *, "OPEN SHELL TOTAL ENERGY (KJ/MOL): ", TOTENERGY*2625.5
+    PRINT *, "OPEN SHELL TOTAL ENERGY (CAUTION! Maybe it is wrong! ): ", TOTENERGY*ec
     PRINT *, "----------------------------------------------------"
 ELSE
     call scfClose(XMAT,HCORE,SMAT,BASIS,NBASIS,NE,mix,PMAT,CMAT,GMAT,TOTENERGY)
@@ -123,18 +123,20 @@ ELSE
     PRINT *, "Traço PS: ", expectValue(PMAT,SMAT,NBASIS)
     PRINT *, "CSC': ", checkOrto(CMAT,SMAT,NBASIS)
     PRINT *, "Mulliken ", mulliken(PMAT,SMAT,ZATOM,NBASIS)
-    PRINT *, "KINETIC ENERGY: ", expectValue(PMAT,TMAT,NBASIS)*27.2114
-    PRINT *, "POTENTIAL ENERGY: ", expectValue(PMAT,UMAT,NBASIS)*27.2114
-    PRINT *, "ONE-ELECTRON ENERGY: ", expectValue(PMAT,HCORE,NBASIS)*27.2114
-    PRINT *, "TWO-ELECTRON ENERGY: ", expectValue(PMAT,GMAT,NBASIS)*27.2114
+    PRINT *, "KINETIC ENERGY: ", expectValue(PMAT,TMAT,NBASIS)*ec
+    PRINT *, "POTENTIAL ENERGY: ", expectValue(PMAT,UMAT,NBASIS)*ec
+    PRINT *, "ONE-ELECTRON ENERGY: ", expectValue(PMAT,HCORE,NBASIS)*ec
+    PRINT *, "TWO-ELECTRON ENERGY: ", expectValue(PMAT,GMAT,NBASIS)*ec
     PRINT *, ""
     PRINT *, "CLOSE SHELL TOTAL tr(PH) + tr(PG) (CAUTION! Maybe it is wrong! ): ", &
-    &(expectValue(PMAT,HCORE,NBASIS) + expectValue(PMAT,GMAT,NBASIS))*27.2114
+    &(expectValue(PMAT,HCORE,NBASIS) + expectValue(PMAT,GMAT,NBASIS))*ec
     PRINT *, "----------------------------------------------------"
     PRINT *, "----------------------------------------------------"
-    PRINT *, "CLOSE SHELL TOTAL ENERGY (CAUTION! Maybe it is wrong! ): ", TOTENERGY*27.2114
-    PRINT *, "CLOSE SHELL TOTAL ENERGY (KJ/MOL): ", TOTENERGY*2625.5
+    PRINT *, "CLOSE SHELL TOTAL ENERGY (CAUTION! Maybe it is wrong! ): ", TOTENERGY*ec
     PRINT *, "----------------------------------------------------"
+    PRINT *, ""
+    PRINT *, ""
+    PRINT *, ""
 END IF
 
 ! Fechar arquivos
